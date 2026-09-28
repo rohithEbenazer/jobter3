@@ -7,10 +7,12 @@ const FilterSidebar = ({
   selectedCompanies = [],
   selectedSkills = [],
   selectedExperiences = [],
+  selectedWorkmodes = [],
   onToggleLocation,
   onToggleCompany,
   onToggleSkill,
   onToggleExperience,
+  onToggleWorkmode,
   onClearAll
 }) => {
   // Extract unique locations with counts
@@ -25,6 +27,11 @@ const FilterSidebar = ({
     '4 Years': 0,
     '5+ Years': 0
   };
+  const workmodeCounts = {
+    'Remote': 0,
+    'On-site': 0,
+    'Hybrid': 0
+  };
 
   allJobs.forEach(job => {
     // Locations
@@ -36,12 +43,26 @@ const FilterSidebar = ({
     const comp = job.company || 'Coforge';
     companyCounts[comp] = (companyCounts[comp] || 0) + 1;
 
-    // Skills
+    // Workmode (Remote / On-site / Hybrid)
+    const modeStr = (String(job.workmode || '') + ' ' + String(job.location || '') + ' ' + String(job.title || '')).toLowerCase();
+    if (modeStr.includes('remote') || modeStr.includes('work from home') || modeStr.includes('wfh')) {
+      workmodeCounts['Remote']++;
+    } else if (modeStr.includes('hybrid')) {
+      workmodeCounts['Hybrid']++;
+    } else {
+      workmodeCounts['On-site']++;
+    }
+
+    // Skills (Filtering out 'null' / 'undefined' string values)
     if (Array.isArray(job.skills)) {
       job.skills.forEach(s => {
         if (s && typeof s === 'string') {
           const cleanSkill = s.trim();
-          if (cleanSkill.length > 1) {
+          if (
+            cleanSkill.length > 1 &&
+            cleanSkill.toLowerCase() !== 'null' &&
+            cleanSkill.toLowerCase() !== 'undefined'
+          ) {
             skillCounts[cleanSkill] = (skillCounts[cleanSkill] || 0) + 1;
           }
         }
@@ -62,12 +83,14 @@ const FilterSidebar = ({
   const companiesList = Object.keys(companyCounts);
   const skillsList = Object.keys(skillCounts).sort((a, b) => skillCounts[b] - skillCounts[a]).slice(0, 12);
   const experiencesList = ['0 Years', '1 Year', '2 Years', '3 Years', '4 Years', '5+ Years'];
+  const workmodesList = ['Remote', 'On-site', 'Hybrid'];
 
   const totalActiveFilters =
     selectedLocations.length +
     selectedCompanies.length +
     selectedSkills.length +
-    selectedExperiences.length;
+    selectedExperiences.length +
+    selectedWorkmodes.length;
 
   return (
     <aside className="filter-sidebar">
@@ -111,7 +134,33 @@ const FilterSidebar = ({
         </div>
       </div>
 
-      {/* 2. COMPANY CHECKBOXES */}
+      {/* 2. WORK MODE CHECKBOXES (Remote / On-site / Hybrid) */}
+      <div className="filter-group">
+        <div className="filter-group-title">
+          <span>🏠</span> Work Mode
+        </div>
+        <div className="filter-options-list">
+          {workmodesList.map((mode) => {
+            const isChecked = selectedWorkmodes.includes(mode);
+            return (
+              <label key={mode} className={`checkbox-label ${isChecked ? 'checked' : ''}`}>
+                <div className="checkbox-left">
+                  <input
+                    type="checkbox"
+                    className="checkbox-input"
+                    checked={isChecked}
+                    onChange={() => onToggleWorkmode(mode)}
+                  />
+                  <span>{mode}</span>
+                </div>
+                <span className="filter-count">{workmodeCounts[mode]}</span>
+              </label>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 3. COMPANY CHECKBOXES */}
       <div className="filter-group">
         <div className="filter-group-title">
           <span>🏢</span> Company
@@ -137,7 +186,7 @@ const FilterSidebar = ({
         </div>
       </div>
 
-      {/* 3. EXPERIENCE CHECKBOXES (Single Year Match, Not Range) */}
+      {/* 4. EXPERIENCE CHECKBOXES (Single Year Match, Not Range) */}
       <div className="filter-group">
         <div className="filter-group-title">
           <span>💼</span> Experience (Single Year)
@@ -163,7 +212,7 @@ const FilterSidebar = ({
         </div>
       </div>
 
-      {/* 4. SKILLS CHECKBOXES */}
+      {/* 5. SKILLS CHECKBOXES */}
       {skillsList.length > 0 && (
         <div className="filter-group">
           <div className="filter-group-title">

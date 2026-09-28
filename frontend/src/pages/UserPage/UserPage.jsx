@@ -15,6 +15,7 @@ const UserPage = ({ onViewDetails, showToast }) => {
   const [selectedCompanies, setSelectedCompanies] = useState([]);
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [selectedExperiences, setSelectedExperiences] = useState([]);
+  const [selectedWorkmodes, setSelectedWorkmodes] = useState([]);
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -25,7 +26,7 @@ const UserPage = ({ onViewDetails, showToast }) => {
     try {
       setLoading(true);
       const url = new URL(`${API_BASE}/db`);
-      url.searchParams.append('limit', 1000); // Fetch all stored jobs for client multi-filtering
+      url.searchParams.append('limit', 1000); // Fetch stored jobs for client multi-filtering
 
       const res = await fetch(url);
       const data = await res.json();
@@ -73,11 +74,19 @@ const UserPage = ({ onViewDetails, showToast }) => {
     setPage(1);
   };
 
+  const handleToggleWorkmode = (mode) => {
+    setSelectedWorkmodes(prev =>
+      prev.includes(mode) ? prev.filter(m => m !== mode) : [...prev, mode]
+    );
+    setPage(1);
+  };
+
   const handleClearAllFilters = () => {
     setSelectedLocations([]);
     setSelectedCompanies([]);
     setSelectedSkills([]);
     setSelectedExperiences([]);
+    setSelectedWorkmodes([]);
     setSearchTitle('');
     setPage(1);
   };
@@ -104,21 +113,33 @@ const UserPage = ({ onViewDetails, showToast }) => {
         if (!matchesLoc) return false;
       }
 
-      // 3. Company Checkbox Filter
+      // 3. Work Mode Checkbox Filter (Remote / On-site / Hybrid)
+      if (selectedWorkmodes.length > 0) {
+        const modeStr = (String(job.workmode || '') + ' ' + String(job.location || '') + ' ' + String(job.title || '')).toLowerCase();
+        let jobMode = 'On-site';
+        if (modeStr.includes('remote') || modeStr.includes('work from home') || modeStr.includes('wfh')) {
+          jobMode = 'Remote';
+        } else if (modeStr.includes('hybrid')) {
+          jobMode = 'Hybrid';
+        }
+        if (!selectedWorkmodes.includes(jobMode)) return false;
+      }
+
+      // 4. Company Checkbox Filter
       if (selectedCompanies.length > 0) {
         const compStr = String(job.company || 'Coforge').toLowerCase();
         const matchesComp = selectedCompanies.some(c => compStr.includes(c.toLowerCase()));
         if (!matchesComp) return false;
       }
 
-      // 4. Skills Checkbox Filter
+      // 5. Skills Checkbox Filter
       if (selectedSkills.length > 0) {
         const jobSkills = Array.isArray(job.skills) ? job.skills.map(s => String(s).toLowerCase()) : [];
         const matchesSkill = selectedSkills.some(s => jobSkills.some(js => js.includes(s.toLowerCase())));
         if (!matchesSkill) return false;
       }
 
-      // 5. Single Experience Checkbox Filter (Not range, single year matching)
+      // 6. Single Experience Checkbox Filter (Not range, single year matching)
       if (selectedExperiences.length > 0) {
         const minExp = Number(job.minYrsOfExperience || job.minYears || 0);
         let expTag = '0 Years';
@@ -134,7 +155,7 @@ const UserPage = ({ onViewDetails, showToast }) => {
 
       return true;
     });
-  }, [allDbJobs, searchTitle, selectedLocations, selectedCompanies, selectedSkills, selectedExperiences]);
+  }, [allDbJobs, searchTitle, selectedLocations, selectedCompanies, selectedSkills, selectedExperiences, selectedWorkmodes]);
 
   // Paginated Results
   const totalPages = Math.ceil(filteredJobs.length / pageSize) || 1;
@@ -150,7 +171,7 @@ const UserPage = ({ onViewDetails, showToast }) => {
           <span className="badge-dot-green"></span> Candidate Career Portal
         </div>
         <h1>Explore Verified Coforge Openings</h1>
-        <p>Use the combined multi-select filters on the left to filter openings by Location, Company, Skills, and Single Experience years.</p>
+        <p>Use the combined multi-select filters on the left to filter openings by Location, Work Mode (Remote/On-site/Hybrid), Company, Skills, and Experience.</p>
       </div>
 
       {/* 2-Column Portal Layout */}
@@ -162,10 +183,12 @@ const UserPage = ({ onViewDetails, showToast }) => {
           selectedCompanies={selectedCompanies}
           selectedSkills={selectedSkills}
           selectedExperiences={selectedExperiences}
+          selectedWorkmodes={selectedWorkmodes}
           onToggleLocation={handleToggleLocation}
           onToggleCompany={handleToggleCompany}
           onToggleSkill={handleToggleSkill}
           onToggleExperience={handleToggleExperience}
+          onToggleWorkmode={handleToggleWorkmode}
           onClearAll={handleClearAllFilters}
         />
 

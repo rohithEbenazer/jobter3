@@ -113,9 +113,17 @@ function mapCoforgeJobs(rawItem) {
 
   const title = item.jobTitle || item.title || item.parsed_designation || item.roles || "Coforge Opening";
   const rawUrl = item.jobUrl || item.url || '';
-  const fullUrl = rawUrl
-    ? (rawUrl.startsWith("http") ? rawUrl : `https://careers.coforge.com/${rawUrl.startsWith('/') ? rawUrl.substring(1) : rawUrl}`)
-    : `https://careers.coforge.com/coforge/jobs/${jobId}`;
+  let fullUrl = '';
+  if (rawUrl) {
+    if (rawUrl.startsWith("http")) {
+      fullUrl = rawUrl;
+    } else {
+      const cleanSlug = rawUrl.startsWith('/') ? rawUrl.substring(1) : rawUrl;
+      fullUrl = `https://careers.coforge.com/coforge/jobview/${cleanSlug}?id=${jobId}`;
+    }
+  } else {
+    fullUrl = `https://careers.coforge.com/coforge/jobview/job?id=${jobId}`;
+  }
 
   const minExp = parseExpNumber(item.minYrsOfExperience ?? item.minYearOfExperience ?? item.minYears, 0);
   const maxExp = parseExpNumber(item.maxYrsOfExperience ?? item.maxYearOfExperience ?? item.maxYears, 99);

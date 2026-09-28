@@ -206,6 +206,20 @@ const UserPage = ({ onViewDetails, showToast }) => {
     });
   }, [allDbJobs, searchTitle, selectedLocations, selectedDates, selectedCompanies, selectedSkills, selectedExperiences, selectedWorkmodes, selectedShifts, selectedSalaries]);
 
+  const scrollToJobsTop = () => {
+    const el = document.querySelector('.user-search-header') || document.querySelector('.portal-main-content');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    scrollToJobsTop();
+  };
+
   // Paginated Results
   const totalPages = Math.ceil(filteredJobs.length / pageSize) || 1;
   const paginatedJobs = useMemo(() => {
@@ -292,7 +306,7 @@ const UserPage = ({ onViewDetails, showToast }) => {
                     <button
                       className="btn btn-secondary btn-small"
                       disabled={page <= 1}
-                      onClick={() => setPage(p => p - 1)}
+                      onClick={() => handlePageChange(page - 1)}
                     >
                       ← Previous
                     </button>
@@ -300,7 +314,7 @@ const UserPage = ({ onViewDetails, showToast }) => {
                     <button
                       className="btn btn-secondary btn-small"
                       disabled={page >= totalPages}
-                      onClick={() => setPage(p => p + 1)}
+                      onClick={() => handlePageChange(page + 1)}
                     >
                       Next →
                     </button>

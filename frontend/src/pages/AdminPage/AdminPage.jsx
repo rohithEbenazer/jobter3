@@ -45,6 +45,20 @@ const AdminPage = ({ onViewDetails, showToast }) => {
     fetchDbJobs(1);
   }, [searchTitle, searchLoc]);
 
+  const scrollToJobsTop = () => {
+    const el = document.querySelector('.jobs-section-bar') || document.querySelector('.admin-page .jobs-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleAdminPageChange = (newPage) => {
+    fetchDbJobs(newPage);
+    scrollToJobsTop();
+  };
+
   return (
     <div className="admin-page">
       <div className="admin-page-hero">
@@ -122,7 +136,7 @@ const AdminPage = ({ onViewDetails, showToast }) => {
                 <button
                   className="btn btn-secondary btn-small"
                   disabled={page <= 1}
-                  onClick={() => fetchDbJobs(page - 1)}
+                  onClick={() => handleAdminPageChange(page - 1)}
                 >
                   ← Previous
                 </button>
@@ -130,7 +144,7 @@ const AdminPage = ({ onViewDetails, showToast }) => {
                 <button
                   className="btn btn-secondary btn-small"
                   disabled={page >= totalPages}
-                  onClick={() => fetchDbJobs(page + 1)}
+                  onClick={() => handleAdminPageChange(page + 1)}
                 >
                   Next →
                 </button>

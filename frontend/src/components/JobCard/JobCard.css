@@ -102,6 +102,27 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
   padding-top: 1rem;
   border-top: 1px solid var(--border-color);
+}
+
+@media (max-width: 576px) {
+  .job-card {
+    padding: 1.15rem;
+  }
+
+  .job-title {
+    font-size: 1.05rem;
+  }
+
+  .job-card-footer {
+    gap: 0.5rem;
+  }
+
+  .job-card-footer .btn {
+    flex: 1;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
+  }
 }

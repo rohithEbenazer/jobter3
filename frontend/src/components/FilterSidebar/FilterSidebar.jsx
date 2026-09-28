@@ -213,6 +213,8 @@ const FilterSidebar = ({
   const shiftsList = ['Day Shift', 'Night Shift', 'Flexible / Rotational'];
   const salariesList = ['Disclosed Salary', 'Not Disclosed'];
 
+  const [mobileExpanded, setMobileExpanded] = useState(false);
+
   const totalActiveFilters =
     selectedLocations.length +
     selectedDates.length +
@@ -224,23 +226,33 @@ const FilterSidebar = ({
     selectedSalaries.length;
 
   return (
-    <aside className="filter-sidebar">
-      <div className="filter-sidebar-header">
+    <aside className={`filter-sidebar ${mobileExpanded ? 'mobile-expanded' : ''}`}>
+      <div className="filter-sidebar-header" onClick={() => setMobileExpanded(prev => !prev)}>
         <h3>
           <span>⚙️</span> Filter Jobs
           {totalActiveFilters > 0 && (
             <span className="active-filter-badge">{totalActiveFilters} Active</span>
           )}
         </h3>
-        {totalActiveFilters > 0 && (
-          <button className="btn-clear-filters" onClick={handleClearAllWithNav}>
-            Clear All
-          </button>
-        )}
+        <div className="filter-header-right">
+          {totalActiveFilters > 0 && (
+            <button
+              className="btn-clear-filters"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleClearAllWithNav();
+              }}
+            >
+              Clear All
+            </button>
+          )}
+          <span className="mobile-toggle-icon">{mobileExpanded ? '▲ Hide' : '▼ Expand'}</span>
+        </div>
       </div>
 
-      {/* 1. HIERARCHICAL LOCATION FILTER */}
-      <div className="filter-group location-filter-group">
+      <div className={`filter-body-content ${mobileExpanded ? 'is-open' : ''}`}>
+        {/* 1. HIERARCHICAL LOCATION FILTER */}
+        <div className="filter-group location-filter-group">
         <div className="filter-group-title">
           <span>📍</span> Location
         </div>
@@ -616,6 +628,24 @@ const FilterSidebar = ({
           </div>
         </div>
       )}
+
+        {/* Mobile Apply & Hide Filter Button */}
+        <div className="mobile-apply-bar">
+          <button
+            type="button"
+            className="btn btn-primary btn-mobile-apply"
+            onClick={() => {
+              setMobileExpanded(false);
+              const mainEl = document.querySelector('.portal-main-content');
+              if (mainEl) {
+                mainEl.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
+          >
+            ✓ Apply & Show Jobs
+          </button>
+        </div>
+      </div>
     </aside>
   );
 };

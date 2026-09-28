@@ -131,3 +131,34 @@
   font-weight: 600;
   color: var(--text-muted);
 }
+
+@media (max-width: 768px) {
+  .admin-page-hero h1 {
+    font-size: 1.75rem;
+  }
+
+  .jobs-section-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-controls {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .search-box {
+    width: 100%;
+  }
+
+  .search-box input {
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .jobs-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}

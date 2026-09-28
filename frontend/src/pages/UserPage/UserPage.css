@@ -131,5 +131,51 @@
 @media (max-width: 992px) {
   .portal-layout {
     grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .user-page-hero {
+    margin-bottom: 1.5rem;
+  }
+
+  .user-page-hero h1 {
+    font-size: 1.75rem;
+  }
+
+  .user-page-hero p {
+    font-size: 0.95rem;
+  }
+
+  .user-search-header {
+    padding: 1rem;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box-large {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .count-badge-green {
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 576px) {
+  .jobs-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .pagination-bar {
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .page-info {
+    font-size: 0.825rem;
   }
 }

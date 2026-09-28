@@ -107,3 +107,42 @@
   display: flex;
   justify-content: flex-end;
 }
+
+@media (max-width: 576px) {
+  .modal-overlay {
+    padding: 0.75rem;
+  }
+
+  .modal-card {
+    padding: 1.25rem 1rem;
+    max-height: 90vh;
+    border-radius: var(--radius-md);
+  }
+
+  .modal-header h2 {
+    font-size: 1.25rem;
+    padding-right: 2.2rem;
+  }
+
+  .modal-close {
+    top: 1rem;
+    right: 1rem;
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+
+  .job-description-box {
+    padding: 0.85rem;
+    font-size: 0.85rem;
+    max-height: 220px;
+  }
+
+  .modal-footer {
+    margin-top: 1.25rem;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+  }
+}

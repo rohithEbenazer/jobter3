@@ -121,3 +121,38 @@
 .stat-value.success { color: var(--success); }
 .stat-value.info { color: var(--info); }
 .stat-value.primary { color: #818cf8; }
+
+@media (max-width: 768px) {
+  .admin-panel {
+    padding: 1.25rem;
+  }
+
+  .panel-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .admin-actions .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .stat-card {
+    padding: 0.85rem;
+  }
+
+  .stat-value {
+    font-size: 1.4rem;
+  }
+}

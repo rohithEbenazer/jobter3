@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './LivePreviewModal.css';
 
-const API_BASE = 'http://localhost:5000/api/jobs/cogforce';
+import { API_BASE } from '../../utils/apiConfig';
 
 const LivePreviewModal = ({ onClose, showToast }) => {
   const [liveJobs, setLiveJobs] = useState([]);

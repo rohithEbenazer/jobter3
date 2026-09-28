@@ -4,7 +4,7 @@ import JobCard from '../../components/JobCard/JobCard';
 import { checkLocationMatch, checkDateMatch } from '../../utils/locationUtils';
 import './UserPage.css';
 
-const API_BASE = 'http://localhost:5000/api/jobs/cogforce';
+import { API_BASE } from '../../utils/apiConfig';
 
 const UserPage = ({ onViewDetails, showToast }) => {
   const [allDbJobs, setAllDbJobs] = useState([]);

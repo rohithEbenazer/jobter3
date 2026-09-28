@@ -4,7 +4,7 @@ import LivePreviewModal from '../../components/LivePreviewModal/LivePreviewModal
 import JobCard from '../../components/JobCard/JobCard';
 import './AdminPage.css';
 
-const API_BASE = 'http://localhost:5000/api/jobs/cogforce';
+import { API_BASE } from '../../utils/apiConfig';
 
 const AdminPage = ({ onViewDetails, showToast }) => {
   const [showLivePreview, setShowLivePreview] = useState(false);

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './AdminControls.css';
 
-const API_BASE = 'http://localhost:5000/api/jobs/cogforce';
+import { API_BASE } from '../../utils/apiConfig';
 
 const AdminControls = ({ onSyncSuccess, onOpenLivePreview, showToast }) => {
   const [syncing, setSyncing] = useState(false);

@@ -5,7 +5,7 @@ import JobModal from './components/JobModal/JobModal';
 import Toast from './components/Toast/Toast';
 import './App.css';
 
-const API_BASE = 'http://localhost:5000/api/jobs/cogforce';
+import { API_BASE } from './utils/apiConfig';
 
 function App() {
   const [role, setRole] = useState('super_admin'); // 'super_admin' | 'user'

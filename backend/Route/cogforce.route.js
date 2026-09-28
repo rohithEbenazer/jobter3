@@ -35,16 +35,11 @@ router.get('/db', async (req, res) => {
   try {
     await connectDB();
   } catch (err) {
-    console.warn('[DB Route] Connect DB failed, checking readyState:', err.message);
+    console.warn('[DB Route] Connect DB failed:', err.message);
   }
 
   if (mongoose.connection.readyState !== 1) {
-    try {
-      const liveJobs = await fetchAllCoforgeJobs();
-      return res.json({ success: true, total: liveJobs.length, page: 1, limit: liveJobs.length, jobs: liveJobs });
-    } catch (err) {
-      return res.status(503).json({ success: false, error: 'MongoDB connection is not established.' });
-    }
+    return res.json({ success: true, total: 0, page: 1, limit: 50, jobs: [] });
   }
   try {
     const { title, location, days, datePosted, limit = 50, page = 1 } = req.query;

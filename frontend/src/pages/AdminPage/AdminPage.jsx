@@ -26,6 +26,10 @@ const AdminPage = ({ onViewDetails, showToast }) => {
       if (searchLoc) url.searchParams.append('location', searchLoc);
 
       const res = await fetch(url);
+      if (!res.ok) {
+        setJobs([]);
+        return;
+      }
       const data = await res.json();
       if (data.success && Array.isArray(data.jobs)) {
         setJobs(data.jobs);

@@ -3,7 +3,13 @@ import './JobCard.css';
 
 const JobCard = ({ job, onViewDetails }) => {
   const isRemote = String(job.workmode || '').toLowerCase().includes('remote') || String(job.location || '').toLowerCase().includes('remote');
-  const skillsList = Array.isArray(job.skills) ? job.skills.slice(0, 4) : [];
+  const skillsList = Array.isArray(job.skills)
+    ? job.skills.filter(s => s && s.toLowerCase() !== 'null' && s.toLowerCase() !== 'undefined').slice(0, 4)
+    : [];
+
+  const shiftText = job.shift || 'Day Shift';
+  const shiftIcon = shiftText.includes('Night') ? '🌙' : (shiftText.includes('Flexible') ? '🔄' : '☀️');
+  const salaryText = job.salary || 'Competitive Salary';
 
   return (
     <div className="job-card">
@@ -17,6 +23,8 @@ const JobCard = ({ job, onViewDetails }) => {
         <div className="job-tags">
           <span className="tag">📍 {job.location || 'India'}</span>
           <span className="tag">💼 {job.yrsOfExperience || 'Not specified'}</span>
+          <span className="tag">{shiftIcon} {shiftText}</span>
+          <span className="tag">💵 {salaryText}</span>
           {isRemote && <span className="tag remote">🏠 Remote</span>}
         </div>
 

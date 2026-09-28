@@ -8,14 +8,18 @@ const FilterSidebar = ({
   selectedSkills = [],
   selectedExperiences = [],
   selectedWorkmodes = [],
+  selectedShifts = [],
+  selectedSalaries = [],
   onToggleLocation,
   onToggleCompany,
   onToggleSkill,
   onToggleExperience,
   onToggleWorkmode,
+  onToggleShift,
+  onToggleSalary,
   onClearAll
 }) => {
-  // Extract unique locations with counts
+  // Extract counts
   const locationCounts = {};
   const companyCounts = {};
   const skillCounts = {};
@@ -31,6 +35,18 @@ const FilterSidebar = ({
     'Remote': 0,
     'On-site': 0,
     'Hybrid': 0
+  };
+  const shiftCounts = {
+    'Day Shift': 0,
+    'Night Shift': 0,
+    'Flexible / Rotational': 0
+  };
+  const salaryCounts = {
+    '₹ 3 - 6 LPA': 0,
+    '₹ 6 - 10 LPA': 0,
+    '₹ 10 - 15 LPA': 0,
+    '₹ 15 - 25 LPA': 0,
+    '₹ 25+ LPA': 0
   };
 
   allJobs.forEach(job => {
@@ -53,6 +69,30 @@ const FilterSidebar = ({
       workmodeCounts['On-site']++;
     }
 
+    // Shift (Day Shift / Night Shift / Flexible)
+    const shiftVal = job.shift || 'Day Shift';
+    if (shiftCounts[shiftVal] !== undefined) {
+      shiftCounts[shiftVal]++;
+    } else {
+      shiftCounts['Day Shift']++;
+    }
+
+    // Salary (Rupee Ranges: ₹3-6 LPA, ₹6-10 LPA, ₹10-15 LPA, ₹15-25 LPA, ₹25+ LPA)
+    const minExp = Number(job.minYrsOfExperience || job.minYears || 0);
+    const salStr = String(job.salary || '');
+
+    if (salStr.includes('4.5') || minExp <= 1) {
+      salaryCounts['₹ 3 - 6 LPA']++;
+    } else if (salStr.includes('6.0') || salStr.includes('8.5') || minExp <= 3) {
+      salaryCounts['₹ 6 - 10 LPA']++;
+    } else if (salStr.includes('13.5') || minExp <= 6) {
+      salaryCounts['₹ 10 - 15 LPA']++;
+    } else if (salStr.includes('20.0') || minExp <= 9) {
+      salaryCounts['₹ 15 - 25 LPA']++;
+    } else {
+      salaryCounts['₹ 25+ LPA']++;
+    }
+
     // Skills (Filtering out 'null' / 'undefined' string values)
     if (Array.isArray(job.skills)) {
       job.skills.forEach(s => {
@@ -70,7 +110,6 @@ const FilterSidebar = ({
     }
 
     // Single Experience matching
-    const minExp = Number(job.minYrsOfExperience || job.minYears || 0);
     if (minExp === 0) expCounts['0 Years']++;
     else if (minExp === 1) expCounts['1 Year']++;
     else if (minExp === 2) expCounts['2 Years']++;
@@ -84,13 +123,17 @@ const FilterSidebar = ({
   const skillsList = Object.keys(skillCounts).sort((a, b) => skillCounts[b] - skillCounts[a]).slice(0, 12);
   const experiencesList = ['0 Years', '1 Year', '2 Years', '3 Years', '4 Years', '5+ Years'];
   const workmodesList = ['Remote', 'On-site', 'Hybrid'];
+  const shiftsList = ['Day Shift', 'Night Shift', 'Flexible / Rotational'];
+  const salariesList = ['₹ 3 - 6 LPA', '₹ 6 - 10 LPA', '₹ 10 - 15 LPA', '₹ 15 - 25 LPA', '₹ 25+ LPA'];
 
   const totalActiveFilters =
     selectedLocations.length +
     selectedCompanies.length +
     selectedSkills.length +
     selectedExperiences.length +
-    selectedWorkmodes.length;
+    selectedWorkmodes.length +
+    selectedShifts.length +
+    selectedSalaries.length;
 
   return (
     <aside className="filter-sidebar">
@@ -134,7 +177,33 @@ const FilterSidebar = ({
         </div>
       </div>
 
-      {/* 2. WORK MODE CHECKBOXES (Remote / On-site / Hybrid) */}
+      {/* 2. SALARY (RUPEE ₹ LPA) CHECKBOXES */}
+      <div className="filter-group">
+        <div className="filter-group-title">
+          <span>💵</span> Salary (Rupees ₹ LPA)
+        </div>
+        <div className="filter-options-list">
+          {salariesList.map((sal) => {
+            const isChecked = selectedSalaries.includes(sal);
+            return (
+              <label key={sal} className={`checkbox-label ${isChecked ? 'checked' : ''}`}>
+                <div className="checkbox-left">
+                  <input
+                    type="checkbox"
+                    className="checkbox-input"
+                    checked={isChecked}
+                    onChange={() => onToggleSalary(sal)}
+                  />
+                  <span>{sal}</span>
+                </div>
+                <span className="filter-count">{salaryCounts[sal] || 0}</span>
+              </label>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 3. WORK MODE CHECKBOXES (Remote / On-site / Hybrid) */}
       <div className="filter-group">
         <div className="filter-group-title">
           <span>🏠</span> Work Mode
@@ -160,7 +229,33 @@ const FilterSidebar = ({
         </div>
       </div>
 
-      {/* 3. COMPANY CHECKBOXES */}
+      {/* 4. SHIFT CHECKBOXES (Day Shift / Night Shift / Flexible) */}
+      <div className="filter-group">
+        <div className="filter-group-title">
+          <span>☀️</span> Shift Type
+        </div>
+        <div className="filter-options-list">
+          {shiftsList.map((shift) => {
+            const isChecked = selectedShifts.includes(shift);
+            return (
+              <label key={shift} className={`checkbox-label ${isChecked ? 'checked' : ''}`}>
+                <div className="checkbox-left">
+                  <input
+                    type="checkbox"
+                    className="checkbox-input"
+                    checked={isChecked}
+                    onChange={() => onToggleShift(shift)}
+                  />
+                  <span>{shift}</span>
+                </div>
+                <span className="filter-count">{shiftCounts[shift] || 0}</span>
+              </label>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 5. COMPANY CHECKBOXES */}
       <div className="filter-group">
         <div className="filter-group-title">
           <span>🏢</span> Company
@@ -186,7 +281,7 @@ const FilterSidebar = ({
         </div>
       </div>
 
-      {/* 4. EXPERIENCE CHECKBOXES (Single Year Match, Not Range) */}
+      {/* 6. EXPERIENCE CHECKBOXES (Single Year Match, Not Range) */}
       <div className="filter-group">
         <div className="filter-group-title">
           <span>💼</span> Experience (Single Year)
@@ -212,7 +307,7 @@ const FilterSidebar = ({
         </div>
       </div>
 
-      {/* 5. SKILLS CHECKBOXES */}
+      {/* 7. SKILLS CHECKBOXES */}
       {skillsList.length > 0 && (
         <div className="filter-group">
           <div className="filter-group-title">

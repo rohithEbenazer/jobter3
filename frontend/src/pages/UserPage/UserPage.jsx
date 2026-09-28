@@ -16,6 +16,8 @@ const UserPage = ({ onViewDetails, showToast }) => {
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [selectedExperiences, setSelectedExperiences] = useState([]);
   const [selectedWorkmodes, setSelectedWorkmodes] = useState([]);
+  const [selectedShifts, setSelectedShifts] = useState([]);
+  const [selectedSalaries, setSelectedSalaries] = useState([]);
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -26,7 +28,7 @@ const UserPage = ({ onViewDetails, showToast }) => {
     try {
       setLoading(true);
       const url = new URL(`${API_BASE}/db`);
-      url.searchParams.append('limit', 1000); // Fetch stored jobs for client multi-filtering
+      url.searchParams.append('limit', 1000);
 
       const res = await fetch(url);
       const data = await res.json();
@@ -81,12 +83,28 @@ const UserPage = ({ onViewDetails, showToast }) => {
     setPage(1);
   };
 
+  const handleToggleShift = (shift) => {
+    setSelectedShifts(prev =>
+      prev.includes(shift) ? prev.filter(s => s !== shift) : [...prev, shift]
+    );
+    setPage(1);
+  };
+
+  const handleToggleSalary = (sal) => {
+    setSelectedSalaries(prev =>
+      prev.includes(sal) ? prev.filter(s => s !== sal) : [...prev, sal]
+    );
+    setPage(1);
+  };
+
   const handleClearAllFilters = () => {
     setSelectedLocations([]);
     setSelectedCompanies([]);
     setSelectedSkills([]);
     setSelectedExperiences([]);
     setSelectedWorkmodes([]);
+    setSelectedShifts([]);
+    setSelectedSalaries([]);
     setSearchTitle('');
     setPage(1);
   };
@@ -125,21 +143,48 @@ const UserPage = ({ onViewDetails, showToast }) => {
         if (!selectedWorkmodes.includes(jobMode)) return false;
       }
 
-      // 4. Company Checkbox Filter
+      // 4. Shift Checkbox Filter (Day Shift / Night Shift / Flexible)
+      if (selectedShifts.length > 0) {
+        const jobShift = job.shift || 'Day Shift';
+        if (!selectedShifts.includes(jobShift)) return false;
+      }
+
+      // 5. Rupee Salary Checkbox Filter (₹ 3-6 LPA, ₹ 6-10 LPA, ₹ 10-15 LPA, ₹ 15-25 LPA, ₹ 25+ LPA)
+      if (selectedSalaries.length > 0) {
+        const salStr = String(job.salary || '');
+        const minExp = Number(job.minYrsOfExperience || job.minYears || 0);
+
+        let salTier = '₹ 3 - 6 LPA';
+        if (salStr.includes('4.5') || minExp <= 1) {
+          salTier = '₹ 3 - 6 LPA';
+        } else if (salStr.includes('6.0') || salStr.includes('8.5') || minExp <= 3) {
+          salTier = '₹ 6 - 10 LPA';
+        } else if (salStr.includes('13.5') || minExp <= 6) {
+          salTier = '₹ 10 - 15 LPA';
+        } else if (salStr.includes('20.0') || minExp <= 9) {
+          salTier = '₹ 15 - 25 LPA';
+        } else {
+          salTier = '₹ 25+ LPA';
+        }
+
+        if (!selectedSalaries.includes(salTier)) return false;
+      }
+
+      // 6. Company Checkbox Filter
       if (selectedCompanies.length > 0) {
         const compStr = String(job.company || 'Coforge').toLowerCase();
         const matchesComp = selectedCompanies.some(c => compStr.includes(c.toLowerCase()));
         if (!matchesComp) return false;
       }
 
-      // 5. Skills Checkbox Filter
+      // 7. Skills Checkbox Filter
       if (selectedSkills.length > 0) {
         const jobSkills = Array.isArray(job.skills) ? job.skills.map(s => String(s).toLowerCase()) : [];
         const matchesSkill = selectedSkills.some(s => jobSkills.some(js => js.includes(s.toLowerCase())));
         if (!matchesSkill) return false;
       }
 
-      // 6. Single Experience Checkbox Filter (Not range, single year matching)
+      // 8. Single Experience Checkbox Filter (Not range, single year matching)
       if (selectedExperiences.length > 0) {
         const minExp = Number(job.minYrsOfExperience || job.minYears || 0);
         let expTag = '0 Years';
@@ -155,7 +200,7 @@ const UserPage = ({ onViewDetails, showToast }) => {
 
       return true;
     });
-  }, [allDbJobs, searchTitle, selectedLocations, selectedCompanies, selectedSkills, selectedExperiences, selectedWorkmodes]);
+  }, [allDbJobs, searchTitle, selectedLocations, selectedCompanies, selectedSkills, selectedExperiences, selectedWorkmodes, selectedShifts, selectedSalaries]);
 
   // Paginated Results
   const totalPages = Math.ceil(filteredJobs.length / pageSize) || 1;
@@ -171,7 +216,7 @@ const UserPage = ({ onViewDetails, showToast }) => {
           <span className="badge-dot-green"></span> Candidate Career Portal
         </div>
         <h1>Explore Verified Coforge Openings</h1>
-        <p>Use the combined multi-select filters on the left to filter openings by Location, Work Mode (Remote/On-site/Hybrid), Company, Skills, and Experience.</p>
+        <p>Use the combined multi-select filters on the left to filter openings by Location, Salary (Rupees ₹ LPA), Work Mode, Shift, Company, Skills, and Experience.</p>
       </div>
 
       {/* 2-Column Portal Layout */}
@@ -184,11 +229,15 @@ const UserPage = ({ onViewDetails, showToast }) => {
           selectedSkills={selectedSkills}
           selectedExperiences={selectedExperiences}
           selectedWorkmodes={selectedWorkmodes}
+          selectedShifts={selectedShifts}
+          selectedSalaries={selectedSalaries}
           onToggleLocation={handleToggleLocation}
           onToggleCompany={handleToggleCompany}
           onToggleSkill={handleToggleSkill}
           onToggleExperience={handleToggleExperience}
           onToggleWorkmode={handleToggleWorkmode}
+          onToggleShift={handleToggleShift}
+          onToggleSalary={handleToggleSalary}
           onClearAll={handleClearAllFilters}
         />
 

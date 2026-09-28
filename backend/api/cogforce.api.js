@@ -104,6 +104,75 @@ function parseExpNumber(val, defaultVal) {
   return isNaN(num) ? defaultVal : num;
 }
 
+function extractSalary(item, text) {
+  if (item.salary && String(item.salary).trim() !== '' && String(item.salary).toLowerCase() !== 'null' && String(item.salary).toLowerCase() !== 'undefined') {
+    return String(item.salary).trim();
+  }
+
+  const str = String(text || '');
+
+  // 1. Hourly Rate Range extraction: e.g. '$17/hr - $18/hr', '$25/hr', '$17 - $18 / hour', 'Pay Rate: $25/hr'
+  const hourlyRangeMatch = str.match(/(?:pay\s*rate\s*[:\-]?\s*)?[$₹€£]?\s*(\d+(?:\.\d+)?)\s*(?:\/hr|\/hour|per\s*hour)?\s*(?:to|-)\s*[$₹€£]?\s*(\d+(?:\.\d+)?)\s*(?:\/hr|\/hour|per\s*hour|\s*on\s*w2)/i);
+  if (hourlyRangeMatch) {
+    const minH = parseFloat(hourlyRangeMatch[1]);
+    const maxH = parseFloat(hourlyRangeMatch[2]);
+    if (!isNaN(minH) && !isNaN(maxH) && minH > 0 && minH < 500 && maxH < 500) {
+      const minLpa = (minH * 2080 * 0.00083).toFixed(1);
+      const maxLpa = (maxH * 2080 * 0.00083).toFixed(1);
+      return `₹ ${minLpa} - ₹ ${maxLpa} LPA ($${minH} - $${maxH}/hr)`;
+    }
+  }
+
+  // 2. Single Hourly Rate extraction: e.g. '$17/hr', '$25/hr', 'Pay Rate - $25/hr'
+  const singleHourlyMatch = str.match(/(?:pay\s*rate\s*[:\-]?\s*)?[$₹€£]\s*(\d+(?:\.\d+)?)\s*(?:\/hr|\/hour|per\s*hour|\s*on\s*w2)/i);
+  if (singleHourlyMatch) {
+    const h = parseFloat(singleHourlyMatch[1]);
+    if (!isNaN(h) && h > 0 && h < 500) {
+      const lpa = (h * 2080 * 0.00083).toFixed(1);
+      return `₹ ${lpa} LPA ($${h}/hr)`;
+    }
+  }
+
+  // 3. Rupee Explicit Range in text (₹ / INR / Rs / LPA / Lakhs)
+  const rupeeMatch = str.match(/(?:[₹]\s*\d+[0-9,.]*\s*(?:lpa|lakhs|lacs|\/month)?\s*(?:to|-)\s*[₹]?\s*\d+[0-9,.]*\s*(?:lpa|lakhs|lacs)?|inr\s*\d+[0-9,.]*|\d+\s*-\s*\d+\s*(?:lpa|lakhs|lacs)|rs\.?\s*\d+[0-9,.]*)/i);
+  if (rupeeMatch) {
+    return rupeeMatch[0].trim();
+  }
+
+  // 4. Annual Dollar Range extraction: e.g. '$50,000 - $80,000', '$50k - $80k'
+  const dollarMatch = str.match(/[$]\s*(\d+)[0-9,.]*\s*(?:k)?\s*(?:to|-)\s*[$]?\s*(\d+)[0-9,.]*\s*(?:k)?/i);
+  if (dollarMatch) {
+    const minK = parseInt(dollarMatch[1]);
+    const maxK = parseInt(dollarMatch[2]);
+    if (!isNaN(minK) && !isNaN(maxK) && minK > 10) {
+      const minLpa = (minK * 0.83).toFixed(1);
+      const maxLpa = (maxK * 0.83).toFixed(1);
+      return `₹ ${minLpa} - ₹ ${maxLpa} LPA ($${minK}k - $${maxK}k)`;
+    }
+  }
+
+  // 5. Experience-based Rupee CTC Range
+  const minExp = parseExpNumber(item.minYrsOfExperience ?? item.minYearOfExperience ?? item.minYears, 0);
+  if (minExp === 0) return "₹ 4.5 - ₹ 7.5 LPA";
+  if (minExp <= 2) return "₹ 6.0 - ₹ 9.5 LPA";
+  if (minExp <= 4) return "₹ 8.5 - ₹ 13.5 LPA";
+  if (minExp <= 7) return "₹ 13.5 - ₹ 20.0 LPA";
+  if (minExp <= 10) return "₹ 20.0 - ₹ 30.0 LPA";
+  return "₹ 30.0 - ₹ 50.0 LPA";
+}
+
+function extractShift(item, text) {
+  const combined = (String(item.workMode || '') + ' ' + String(item.jobType || '') + ' ' + String(text || '')).toLowerCase();
+  
+  if (combined.match(/night shift|evening shift|us shift|uk shift|night|24\/7|rotational shift|graveyard|third shift|second shift/i)) {
+    return "Night Shift";
+  }
+  if (combined.match(/flexible shift|flexible hours|flexi shift|flexible/i)) {
+    return "Flexible / Rotational";
+  }
+  return "Day Shift";
+}
+
 function mapCoforgeJobs(rawItem) {
   if (!rawItem) return null;
   const item = rawItem._source || rawItem;
@@ -155,6 +224,9 @@ function mapCoforgeJobs(rawItem) {
   const rawHtml = item.descriptionHtml || item.details || (item.mediumDescription && item.mediumDescription.length > 500 ? item.mediumDescription : null);
   const descriptionHtml = rawHtml || `<div style="white-space: pre-wrap; font-family: inherit;">${description}</div>`;
 
+  const salary = extractSalary(item, description);
+  const shift = extractShift(item, `${title} ${description}`);
+
   let postedDate = new Date().toISOString();
   if (item.jobCreatedDate) {
     postedDate = new Date(item.jobCreatedDate).toISOString();
@@ -188,6 +260,8 @@ function mapCoforgeJobs(rawItem) {
     jobUrl: fullUrl,
     url: fullUrl,
     skills: skills,
+    salary: salary,
+    shift: shift,
     description: description,
     descriptionHtml: descriptionHtml,
     postedDate: postedDate,

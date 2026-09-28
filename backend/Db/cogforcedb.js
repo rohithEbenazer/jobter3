@@ -54,6 +54,8 @@ const cogforceJobSchema = new mongoose.Schema(
     skills: { type: [String], default: [] },
     mandateSkills: { type: mongoose.Schema.Types.Mixed, default: null },
     role: { type: String, default: null },
+    salary: { type: String, default: 'Competitive Salary' },
+    shift: { type: String, default: 'Day Shift' },
     updatedAt: { type: Date, default: Date.now }
   },
   { collection: 'cogforce_jobs', timestamps: true }

@@ -19,7 +19,7 @@ const AdminPage = ({ onViewDetails, showToast }) => {
   const fetchDbJobs = async (pageNum = 1) => {
     try {
       setLoading(true);
-      const url = new URL(`${API_BASE}/db`);
+      const url = new URL(`${API_BASE}/db`, window.location.origin);
       url.searchParams.append('page', pageNum);
       url.searchParams.append('limit', 12);
       if (searchTitle) url.searchParams.append('title', searchTitle);

@@ -29,7 +29,7 @@ const UserPage = ({ onViewDetails, showToast }) => {
   const fetchAllJobs = async () => {
     try {
       setLoading(true);
-      const url = new URL(`${API_BASE}/db`);
+      const url = new URL(`${API_BASE}/db`, window.location.origin);
       url.searchParams.append('limit', 1000);
 
       const res = await fetch(url);

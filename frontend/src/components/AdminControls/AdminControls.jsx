@@ -19,6 +19,10 @@ const AdminControls = ({ onSyncSuccess, onOpenLivePreview, showToast }) => {
     try {
       const startTime = Date.now();
       const res = await fetch(`${API_BASE}/sync`, { method: 'POST' });
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || `Server returned error status ${res.status}`);
+      }
       const data = await res.json();
       const duration = ((Date.now() - startTime) / 1000).toFixed(1);
 

@@ -309,51 +309,34 @@ function mapCoforgeJobs(rawItem) {
  */
 async function fetchAllCoforgeJobs() {
   try {
+    const maxPages = process.env.VERCEL ? 3 : 10;
+    const pagePromises = [];
+    for (let p = 1; p <= maxPages; p++) {
+      pagePromises.push(fetchCoforgePage(p));
+    }
+
+    const pageResults = await Promise.all(pagePromises);
     const allJobs = [];
     const jobIds = new Set();
 
-    let page = 1;
-    let hasMore = true;
-
-    while (hasMore) {
-      const data = await fetchCoforgePage(page);
-
-
+    for (const data of pageResults) {
+      if (!data) continue;
       const rawJobs = Array.isArray(data?.data?.data)
         ? data.data.data
         : (Array.isArray(data?.data) ? data.data : []);
 
-      if (!rawJobs || rawJobs.length === 0) {
-        break;
-      }
-
       for (const item of rawJobs) {
         const job = mapCoforgeJobs(item);
 
-        if (!job || !job.id) {
-          continue;
-        }
-
-        if (jobIds.has(job.id)) {
+        if (!job || !job.id || jobIds.has(job.id)) {
           continue;
         }
 
         jobIds.add(job.id);
         allJobs.push(job);
       }
-
-      if (rawJobs.length < pageSize) {
-        hasMore = false;
-      } else {
-        page++;
-
-        await new Promise(resolve =>
-          setTimeout(resolve, 300)
-        );
-      }
     }
 
-    // ONLY JSON ARRAY
     return allJobs;
 
   } catch (error) {

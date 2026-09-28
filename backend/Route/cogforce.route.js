@@ -32,6 +32,12 @@ router.get(['/', '/live'], async (req, res) => {
  * @access  Public
  */
 router.get('/db', async (req, res) => {
+  try {
+    await connectDB();
+  } catch (err) {
+    console.warn('[DB Route] Connect DB failed, checking readyState:', err.message);
+  }
+
   if (mongoose.connection.readyState !== 1) {
     try {
       const liveJobs = await fetchAllCoforgeJobs();

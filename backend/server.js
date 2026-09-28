@@ -33,8 +33,15 @@ app.use(express.static(path.join(__dirname, '../frontend')));
 // 2. Import DB connection and Cogforce Job model from cogforcedb
 const { connectDB, CogforceJob } = require('./Db/cogforcedb');
 
-// Connect to MongoDB
-connectDB().catch(err => console.warn('[MongoDB Warning]', err.message));
+// Ensure MongoDB is connected before handling any incoming request
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+  } catch (err) {
+    console.warn('[MongoDB Middleware Warning]', err.message);
+  }
+  next();
+});
 
 // 3. Import and Mount Routes
 const cogforceRouter = require('./Route/cogforce.route');
@@ -48,8 +55,13 @@ app.use('/api/jobs/coforge', cogforceRouter);
 // Server listen for local standalone running
 if (require.main === module || !process.env.VERCEL) {
   const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  connectDB().then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  }).catch(err => {
+    console.error('MongoDB connection failed before server start:', err.message);
+    app.listen(PORT);
   });
 }
 

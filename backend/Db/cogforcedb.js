@@ -1,13 +1,17 @@
 // Support .env environment variables if present
 try { require('dotenv').config(); } catch (e) {}
 
+const mongoose = require('mongoose');
+
+const DEFAULT_ATLAS_URI = 'mongodb+srv://rohithebenazer34_db_user:O2u61ChzAMan3qSP@job777.nwlfd54.mongodb.net/job777?retryWrites=true&w=majority&appName=job777';
+
 /**
  * Connect to MongoDB database
  * @param {string} [customUri] Optional MongoDB URI override
  * @returns {Promise<mongoose.Connection>}
  */
 const connectDB = async (customUri) => {
-  const mongoURI = customUri || process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/cogforce';
+  const mongoURI = customUri || process.env.MONGODB_URI || DEFAULT_ATLAS_URI;
   if (mongoose.connection.readyState >= 1) {
     return mongoose.connection;
   }

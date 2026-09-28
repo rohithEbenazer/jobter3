@@ -76,6 +76,13 @@
   border-color: rgba(16, 185, 129, 0.3);
 }
 
+.tag.date-tag {
+  background: rgba(99, 102, 241, 0.12);
+  color: #818cf8;
+  border-color: rgba(99, 102, 241, 0.3);
+  font-weight: 500;
+}
+
 .job-skills {
   display: flex;
   flex-wrap: wrap;

@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatJobDate } from '../../utils/locationUtils';
 import './JobCard.css';
 
 const JobCard = ({ job, onViewDetails }) => {
@@ -9,7 +10,8 @@ const JobCard = ({ job, onViewDetails }) => {
 
   const shiftText = job.shift || 'Day Shift';
   const shiftIcon = shiftText.includes('Night') ? '🌙' : (shiftText.includes('Flexible') ? '🔄' : '☀️');
-  const salaryText = job.salary || 'Competitive Salary';
+  const hasSalary = job.salary && job.salary !== 'Not Disclosed' && job.salary !== 'Competitive Salary' && job.salary !== 'null';
+  const formattedDate = formatJobDate(job.postedDate || job.postingDate || job.createdAt);
 
   return (
     <div className="job-card">
@@ -21,10 +23,11 @@ const JobCard = ({ job, onViewDetails }) => {
         <h3 className="job-title">{job.title}</h3>
         
         <div className="job-tags">
+          <span className="tag date-tag">🗓️ {formattedDate}</span>
           <span className="tag">📍 {job.location || 'India'}</span>
           <span className="tag">💼 {job.yrsOfExperience || 'Not specified'}</span>
           <span className="tag">{shiftIcon} {shiftText}</span>
-          <span className="tag">💵 {salaryText}</span>
+          {hasSalary && <span className="tag">💵 {job.salary}</span>}
           {isRemote && <span className="tag remote">🏠 Remote</span>}
         </div>
 

@@ -1,10 +1,12 @@
 import React from 'react';
+import { formatJobDate } from '../../utils/locationUtils';
 import './JobModal.css';
 
 const JobModal = ({ job, onClose }) => {
   if (!job) return null;
 
   const skills = Array.isArray(job.skills) ? job.skills : [];
+  const formattedDate = formatJobDate(job.postedDate || job.postingDate || job.createdAt);
 
   return (
     <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && onClose()}>
@@ -15,6 +17,7 @@ const JobModal = ({ job, onClose }) => {
           <span className="modal-company">{job.company || 'Coforge'}</span>
           <h2>{job.title}</h2>
           <div className="modal-meta">
+            <span className="meta-tag">🗓️ Posted: {formattedDate}</span>
             <span className="meta-tag">📍 {job.location || 'Not specified'}</span>
             <span className="meta-tag">💼 {job.yrsOfExperience || 'Not specified'}</span>
             <span className="meta-tag">🏠 {job.workmode || 'On-site'}</span>

@@ -38,7 +38,7 @@ async function fetchCoforgePage(page = 1) {
       },
       timeout: 15000
     });
-    
+
 
     return response.data;
   } catch (error) {
@@ -104,6 +104,25 @@ function parseExpNumber(val, defaultVal) {
   return isNaN(num) ? defaultVal : num;
 }
 
+function parseToIsoString(val) {
+  if (!val) return null;
+  if (typeof val === 'number') {
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? null : d.toISOString();
+  }
+  if (typeof val === 'string') {
+    const str = val.trim();
+    if (!str) return null;
+    if (/^\d{10,13}$/.test(str)) {
+      const d = new Date(parseInt(str, 10));
+      if (!isNaN(d.getTime())) return d.toISOString();
+    }
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) return d.toISOString();
+  }
+  return null;
+}
+
 function extractSalary(item, text) {
   if (item.salary && String(item.salary).trim() !== '' && String(item.salary).toLowerCase() !== 'null' && String(item.salary).toLowerCase() !== 'undefined') {
     return String(item.salary).trim();
@@ -151,19 +170,12 @@ function extractSalary(item, text) {
     }
   }
 
-  // 5. Experience-based Rupee CTC Range
-  const minExp = parseExpNumber(item.minYrsOfExperience ?? item.minYearOfExperience ?? item.minYears, 0);
-  if (minExp === 0) return "₹ 4.5 - ₹ 7.5 LPA";
-  if (minExp <= 2) return "₹ 6.0 - ₹ 9.5 LPA";
-  if (minExp <= 4) return "₹ 8.5 - ₹ 13.5 LPA";
-  if (minExp <= 7) return "₹ 13.5 - ₹ 20.0 LPA";
-  if (minExp <= 10) return "₹ 20.0 - ₹ 30.0 LPA";
-  return "₹ 30.0 - ₹ 50.0 LPA";
+  return null;
 }
 
 function extractShift(item, text) {
   const combined = (String(item.workMode || '') + ' ' + String(item.jobType || '') + ' ' + String(text || '')).toLowerCase();
-  
+
   if (combined.match(/night shift|evening shift|us shift|uk shift|night|24\/7|rotational shift|graveyard|third shift|second shift/i)) {
     return "Night Shift";
   }
@@ -219,7 +231,7 @@ function mapCoforgeJobs(rawItem) {
   } else if (Array.isArray(item.skills)) {
     skills = item.skills;
   }
-  
+
   const description = item.mediumDescriptionWithoutHtml || item.metaDescription || item.description || item.jobDescription || item.overview || '';
   const rawHtml = item.descriptionHtml || item.details || (item.mediumDescription && item.mediumDescription.length > 500 ? item.mediumDescription : null);
   const descriptionHtml = rawHtml || `<div style="white-space: pre-wrap; font-family: inherit;">${description}</div>`;
@@ -227,20 +239,35 @@ function mapCoforgeJobs(rawItem) {
   const salary = extractSalary(item, description);
   const shift = extractShift(item, `${title} ${description}`);
 
-  let postedDate = new Date().toISOString();
-  if (item.jobCreatedDate) {
-    postedDate = new Date(item.jobCreatedDate).toISOString();
-  } else if (item.createdDate) {
-    postedDate = typeof item.createdDate === 'number' ? new Date(item.createdDate).toISOString() : String(item.createdDate);
-  } else if (item.createDate) {
-    postedDate = String(item.createDate);
+  let postedDate = parseToIsoString(item.createDate) ||
+    parseToIsoString(item.createdDate) ||
+    parseToIsoString(item.jobCreatedDate) ||
+    parseToIsoString(item.modifiedDate) ||
+    parseToIsoString(item.requisitionApprovedDate);
+
+  if (!postedDate && item.jobUrl) {
+    const match = String(item.jobUrl).match(/(\d{8})/);
+    if (match) {
+      const yyyymmdd = match[1];
+      const y = yyyymmdd.substring(0, 4);
+      const m = yyyymmdd.substring(4, 6);
+      const d = yyyymmdd.substring(6, 8);
+      const parsed = new Date(`${y}-${m}-${d}`);
+      if (!isNaN(parsed.getTime())) {
+        postedDate = parsed.toISOString();
+      }
+    }
   }
 
-  const workmode = (item.locationDisplayForManageJobs && String(item.locationDisplayForManageJobs).trim().toLowerCase().includes("work from home")) 
-    ? "Remote" 
+  if (!postedDate) {
+    postedDate = new Date().toISOString();
+  }
+
+  const workmode = (item.locationDisplayForManageJobs && String(item.locationDisplayForManageJobs).trim().toLowerCase().includes("work from home"))
+    ? "Remote"
     : (item.workmode || item.workMode || item.jobType || item.modeOfWork || null);
-  const role = (Array.isArray(item.jobCollaborationRecord) 
-    ? item.jobCollaborationRecord.find(l => String(l.jobId || l.id) === jobId)?.role 
+  const role = (Array.isArray(item.jobCollaborationRecord)
+    ? item.jobCollaborationRecord.find(l => String(l.jobId || l.id) === jobId)?.role
     : null) || item.roles || (Array.isArray(item.rolesList) ? item.rolesList[0] : null) || null;
   let mandateSkills = item.skillSet;
 
@@ -290,21 +317,18 @@ async function fetchAllCoforgeJobs() {
 
     while (hasMore) {
       const data = await fetchCoforgePage(page);
-      
+
 
       const rawJobs = Array.isArray(data?.data?.data)
         ? data.data.data
         : (Array.isArray(data?.data) ? data.data : []);
-        
 
       if (!rawJobs || rawJobs.length === 0) {
         break;
       }
 
       for (const item of rawJobs) {
-        // data=fetchCoforgeJobDetailsUrl(item._source.jobUrl,item._source.jobLocationRecord[0].jobId);
         const job = mapCoforgeJobs(item);
-        
 
         if (!job || !job.id) {
           continue;

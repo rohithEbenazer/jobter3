@@ -3,10 +3,10 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 
-const { 
-  fetchAllCoforgeJobs, 
-  fetchCoforgeJobDetailsUrl, 
-  syncCogforceJobsWithDb 
+const {
+  fetchAllCoforgeJobs,
+  fetchCoforgeJobDetailsUrl,
+  syncCogforceJobsWithDb
 } = require('../api/cogforce.api');
 
 const { CogforceJob } = require('../Db/cogforcedb');
@@ -36,7 +36,7 @@ router.get('/db', async (req, res) => {
     return res.status(503).json({ success: false, error: 'MongoDB connection is not established.' });
   }
   try {
-    const { title, location, limit = 50, page = 1 } = req.query;
+    const { title, location, days, datePosted, limit = 50, page = 1 } = req.query;
     const filter = { source: 'Coforge' };
 
     if (title) {
@@ -44,6 +44,43 @@ router.get('/db', async (req, res) => {
     }
     if (location) {
       filter.location = { $regex: location, $options: 'i' };
+    }
+
+    // Date posted filter (1 day, 7 days, 14 days, 30 days, 30+ days)
+    const daysParam = days || datePosted;
+    if (daysParam) {
+      const now = new Date();
+      if (daysParam === '1' || daysParam === '1day' || daysParam === '24h' || daysParam === 'Last 24 Hours') {
+        const d1 = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        filter.$or = [
+          { postedDate: { $gte: d1.toISOString() } },
+          { createdAt: { $gte: d1 } }
+        ];
+      } else if (daysParam === '7' || daysParam === '7days' || daysParam === 'Last 7 Days') {
+        const d7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        filter.$or = [
+          { postedDate: { $gte: d7.toISOString() } },
+          { createdAt: { $gte: d7 } }
+        ];
+      } else if (daysParam === '14' || daysParam === '14days' || daysParam === 'Last 14 Days') {
+        const d14 = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+        filter.$or = [
+          { postedDate: { $gte: d14.toISOString() } },
+          { createdAt: { $gte: d14 } }
+        ];
+      } else if (daysParam === '30' || daysParam === '30days' || daysParam === 'Last 30 Days') {
+        const d30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        filter.$or = [
+          { postedDate: { $gte: d30.toISOString() } },
+          { createdAt: { $gte: d30 } }
+        ];
+      } else if (daysParam === 'older' || daysParam === '30+' || daysParam === 'More than 30 Days') {
+        const d30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        filter.$or = [
+          { postedDate: { $lt: d30.toISOString() } },
+          { createdAt: { $lt: d30 } }
+        ];
+      }
     }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);

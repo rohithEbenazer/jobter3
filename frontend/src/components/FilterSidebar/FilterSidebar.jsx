@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { checkLocationMatch, buildLocationTree, parseJobDate } from '../../utils/locationUtils';
 import './FilterSidebar.css';
 
 const FilterSidebar = ({
   allJobs = [],
   selectedLocations = [],
+  selectedDates = [],
   selectedCompanies = [],
   selectedSkills = [],
   selectedExperiences = [],
@@ -11,6 +13,7 @@ const FilterSidebar = ({
   selectedShifts = [],
   selectedSalaries = [],
   onToggleLocation,
+  onToggleDate,
   onToggleCompany,
   onToggleSkill,
   onToggleExperience,
@@ -19,8 +22,94 @@ const FilterSidebar = ({
   onToggleSalary,
   onClearAll
 }) => {
-  // Extract counts
-  const locationCounts = {};
+  // Hierarchical Location Navigation State
+  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [selectedState, setSelectedState] = useState(null);
+  const [selectedCity, setSelectedCity] = useState('');
+  const [searchLocation, setSearchLocation] = useState('');
+
+  // Reset local location nav state if all filters cleared
+  useEffect(() => {
+    if (selectedLocations.length === 0) {
+      setSelectedCity('');
+    }
+  }, [selectedLocations]);
+
+  const handleClearAllWithNav = () => {
+    setSelectedCountry(null);
+    setSelectedState(null);
+    setSelectedCity('');
+    setSearchLocation('');
+    if (onClearAll) onClearAll();
+  };
+
+  // Build dynamic location tree from allJobs
+  const locationTree = useMemo(() => buildLocationTree(allJobs), [allJobs]);
+
+  const countriesList = useMemo(() => Object.keys(locationTree), [locationTree]);
+
+  const statesList = useMemo(() => {
+    return selectedCountry && locationTree[selectedCountry]
+      ? Object.keys(locationTree[selectedCountry])
+      : [];
+  }, [selectedCountry, locationTree]);
+
+  const citiesList = useMemo(() => {
+    return selectedCountry && selectedState && locationTree[selectedCountry]?.[selectedState]
+      ? locationTree[selectedCountry][selectedState]
+      : [];
+  }, [selectedCountry, selectedState, locationTree]);
+
+  // Compute live job counts for location items
+  const getItemCount = (itemName) => {
+    return allJobs.filter(job => checkLocationMatch(job, [itemName])).length;
+  };
+
+  // Active level items for checkbox list display
+  const displayItems = useMemo(() => {
+    const q = searchLocation.toLowerCase().trim();
+
+    if (!selectedCountry) {
+      // Level 1: Countries
+      return countriesList
+        .filter(c => !q || c.toLowerCase().includes(q))
+        .map(c => ({
+          name: c,
+          level: 'country',
+          canDrill: true,
+          count: getItemCount(c)
+        }));
+    } else if (!selectedState) {
+      // Level 2: States of selectedCountry
+      return statesList
+        .filter(s => !q || s.toLowerCase().includes(q))
+        .map(s => ({
+          name: s,
+          level: 'state',
+          canDrill: true,
+          count: getItemCount(s)
+        }));
+    } else {
+      // Level 3: Cities of selectedState
+      return citiesList
+        .filter(ci => !q || ci.toLowerCase().includes(q))
+        .map(ci => ({
+          name: ci,
+          level: 'city',
+          canDrill: false,
+          count: getItemCount(ci)
+        }));
+    }
+  }, [selectedCountry, selectedState, searchLocation, countriesList, statesList, citiesList, allJobs]);
+
+  // Other Filter Counts
+  const dateCounts = {
+    'Last 24 Hours': 0,
+    'Last 7 Days': 0,
+    'Last 14 Days': 0,
+    'Last 30 Days': 0,
+    'More than 30 Days': 0
+  };
   const companyCounts = {};
   const skillCounts = {};
   const expCounts = {
@@ -42,24 +131,29 @@ const FilterSidebar = ({
     'Flexible / Rotational': 0
   };
   const salaryCounts = {
-    '₹ 3 - 6 LPA': 0,
-    '₹ 6 - 10 LPA': 0,
-    '₹ 10 - 15 LPA': 0,
-    '₹ 15 - 25 LPA': 0,
-    '₹ 25+ LPA': 0
+    'Disclosed Salary': 0,
+    'Not Disclosed': 0
   };
 
   allJobs.forEach(job => {
-    // Locations
-    const loc = job.location || 'Other';
-    const locKey = loc.toLowerCase().includes('remote') ? 'Remote' : (loc.split(';')[0]?.trim() || loc);
-    locationCounts[locKey] = (locationCounts[locKey] || 0) + 1;
+    // Date Posted counts
+    const rawDate = job.postedDate || job.postingDate || job.createdAt;
+    const jobDate = parseJobDate(rawDate);
+    if (jobDate) {
+      const now = new Date();
+      const diffDays = (now.getTime() - jobDate.getTime()) / (1000 * 60 * 60 * 24);
+      if (diffDays >= 0 && diffDays <= 1) dateCounts['Last 24 Hours']++;
+      if (diffDays >= 0 && diffDays <= 7) dateCounts['Last 7 Days']++;
+      if (diffDays >= 0 && diffDays <= 14) dateCounts['Last 14 Days']++;
+      if (diffDays >= 0 && diffDays <= 30) dateCounts['Last 30 Days']++;
+      if (diffDays > 30 || diffDays < 0) dateCounts['More than 30 Days']++;
+    }
 
     // Company
     const comp = job.company || 'Coforge';
     companyCounts[comp] = (companyCounts[comp] || 0) + 1;
 
-    // Workmode (Remote / On-site / Hybrid)
+    // Workmode
     const modeStr = (String(job.workmode || '') + ' ' + String(job.location || '') + ' ' + String(job.title || '')).toLowerCase();
     if (modeStr.includes('remote') || modeStr.includes('work from home') || modeStr.includes('wfh')) {
       workmodeCounts['Remote']++;
@@ -69,7 +163,7 @@ const FilterSidebar = ({
       workmodeCounts['On-site']++;
     }
 
-    // Shift (Day Shift / Night Shift / Flexible)
+    // Shift
     const shiftVal = job.shift || 'Day Shift';
     if (shiftCounts[shiftVal] !== undefined) {
       shiftCounts[shiftVal]++;
@@ -77,23 +171,15 @@ const FilterSidebar = ({
       shiftCounts['Day Shift']++;
     }
 
-    // Salary (Rupee Ranges: ₹3-6 LPA, ₹6-10 LPA, ₹10-15 LPA, ₹15-25 LPA, ₹25+ LPA)
-    const minExp = Number(job.minYrsOfExperience || job.minYears || 0);
+    // Salary
     const salStr = String(job.salary || '');
-
-    if (salStr.includes('4.5') || minExp <= 1) {
-      salaryCounts['₹ 3 - 6 LPA']++;
-    } else if (salStr.includes('6.0') || salStr.includes('8.5') || minExp <= 3) {
-      salaryCounts['₹ 6 - 10 LPA']++;
-    } else if (salStr.includes('13.5') || minExp <= 6) {
-      salaryCounts['₹ 10 - 15 LPA']++;
-    } else if (salStr.includes('20.0') || minExp <= 9) {
-      salaryCounts['₹ 15 - 25 LPA']++;
+    if (salStr && salStr !== 'Not Disclosed' && salStr !== 'Competitive Industry Package') {
+      salaryCounts['Disclosed Salary']++;
     } else {
-      salaryCounts['₹ 25+ LPA']++;
+      salaryCounts['Not Disclosed']++;
     }
 
-    // Skills (Filtering out 'null' / 'undefined' string values)
+    // Skills
     if (Array.isArray(job.skills)) {
       job.skills.forEach(s => {
         if (s && typeof s === 'string') {
@@ -109,7 +195,8 @@ const FilterSidebar = ({
       });
     }
 
-    // Single Experience matching
+    // Experience
+    const minExp = Number(job.minYrsOfExperience || job.minYears || 0);
     if (minExp === 0) expCounts['0 Years']++;
     else if (minExp === 1) expCounts['1 Year']++;
     else if (minExp === 2) expCounts['2 Years']++;
@@ -118,16 +205,17 @@ const FilterSidebar = ({
     else if (minExp >= 5) expCounts['5+ Years']++;
   });
 
-  const locationsList = Object.keys(locationCounts).slice(0, 10);
+  const datesList = ['Last 24 Hours', 'Last 7 Days', 'Last 14 Days', 'Last 30 Days', 'More than 30 Days'];
   const companiesList = Object.keys(companyCounts);
   const skillsList = Object.keys(skillCounts).sort((a, b) => skillCounts[b] - skillCounts[a]).slice(0, 12);
   const experiencesList = ['0 Years', '1 Year', '2 Years', '3 Years', '4 Years', '5+ Years'];
   const workmodesList = ['Remote', 'On-site', 'Hybrid'];
   const shiftsList = ['Day Shift', 'Night Shift', 'Flexible / Rotational'];
-  const salariesList = ['₹ 3 - 6 LPA', '₹ 6 - 10 LPA', '₹ 10 - 15 LPA', '₹ 15 - 25 LPA', '₹ 25+ LPA'];
+  const salariesList = ['Disclosed Salary', 'Not Disclosed'];
 
   const totalActiveFilters =
     selectedLocations.length +
+    selectedDates.length +
     selectedCompanies.length +
     selectedSkills.length +
     selectedExperiences.length +
@@ -145,42 +233,236 @@ const FilterSidebar = ({
           )}
         </h3>
         {totalActiveFilters > 0 && (
-          <button className="btn-clear-filters" onClick={onClearAll}>
+          <button className="btn-clear-filters" onClick={handleClearAllWithNav}>
             Clear All
           </button>
         )}
       </div>
 
-      {/* 1. LOCATION CHECKBOXES */}
-      <div className="filter-group">
+      {/* 1. HIERARCHICAL LOCATION FILTER */}
+      <div className="filter-group location-filter-group">
         <div className="filter-group-title">
           <span>📍</span> Location
         </div>
+
+        {/* Search input at top of Location */}
+        <div className="location-search-box">
+          <span className="location-search-icon">🔍</span>
+          <input
+            type="text"
+            placeholder={
+              selectedCountry && selectedState
+                ? "Search city..."
+                : selectedCountry
+                ? "Search state..."
+                : "Search location..."
+            }
+            value={searchLocation}
+            onChange={(e) => setSearchLocation(e.target.value)}
+            className="location-search-input"
+          />
+          {searchLocation && (
+            <button className="clear-search-btn" onClick={() => setSearchLocation('')}>
+              ×
+            </button>
+          )}
+        </div>
+
+        {/* Country -> State -> City Dropdowns */}
+        <div className="location-dropdowns-wrapper">
+          {/* Country Dropdown */}
+          <div className="location-dropdown-field">
+            <label className="dropdown-label">Country</label>
+            <div className="select-wrapper">
+              <select
+                value={selectedCountry || ''}
+                onChange={(e) => {
+                  const val = e.target.value || null;
+                  setSelectedCountry(val);
+                  setSelectedState(null);
+                  setSelectedCity('');
+                  setSearchLocation('');
+                }}
+                className="location-select"
+              >
+                <option value="">Select Country</option>
+                {countriesList.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              <span className="dropdown-arrow">▼</span>
+            </div>
+          </div>
+
+          {/* State Dropdown */}
+          <div className="location-dropdown-field">
+            <label className="dropdown-label">State</label>
+            <div className="select-wrapper">
+              <select
+                value={selectedState || ''}
+                onChange={(e) => {
+                  const val = e.target.value || null;
+                  setSelectedState(val);
+                  setSelectedCity('');
+                  setSearchLocation('');
+                }}
+                disabled={!selectedCountry}
+                className={`location-select ${!selectedCountry ? 'disabled' : ''}`}
+              >
+                <option value="">Select State</option>
+                {statesList.map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+              <span className="dropdown-arrow">▼</span>
+            </div>
+          </div>
+
+          {/* City Dropdown */}
+          <div className="location-dropdown-field">
+            <label className="dropdown-label">City</label>
+            <div className="select-wrapper">
+              <select
+                value={selectedCity}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSelectedCity(val);
+                  if (val) {
+                    if (!selectedLocations.includes(val)) {
+                      onToggleLocation(val);
+                    }
+                  }
+                }}
+                disabled={!selectedCountry || !selectedState}
+                className={`location-select ${(!selectedCountry || !selectedState) ? 'disabled' : ''}`}
+              >
+                <option value="">Select City</option>
+                {citiesList.map(ci => (
+                  <option key={ci} value={ci}>{ci}</option>
+                ))}
+              </select>
+              <span className="dropdown-arrow">▼</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Location Navigation Breadcrumbs / Level Header */}
+        <div className="location-level-nav">
+          {selectedCountry ? (
+            <div className="location-breadcrumbs">
+              <button
+                type="button"
+                className="btn-back-location"
+                onClick={() => {
+                  if (selectedState) {
+                    setSelectedState(null);
+                  } else {
+                    setSelectedCountry(null);
+                  }
+                }}
+              >
+                ← Back
+              </button>
+              <span className="breadcrumb-path">
+                {selectedCountry}{selectedState ? ` / ${selectedState}` : ''}
+              </span>
+            </div>
+          ) : (
+            <div className="location-level-title">Select Country to view States</div>
+          )}
+        </div>
+
+        {/* Active Level Checkboxes List with Counts */}
+        <div className="filter-options-list location-options-list">
+          {displayItems.length === 0 ? (
+            <div className="empty-location-msg">No matching locations found</div>
+          ) : (
+            displayItems.map((item) => {
+              const isChecked = selectedLocations.includes(item.name);
+              return (
+                <div
+                  key={item.name}
+                  className={`checkbox-label ${isChecked ? 'checked' : ''}`}
+                >
+                  <div className="checkbox-left">
+                    <input
+                      type="checkbox"
+                      className="checkbox-input"
+                      checked={isChecked}
+                      onChange={() => onToggleLocation(item.name)}
+                    />
+                    <span
+                      className="location-item-name"
+                      onClick={() => {
+                        if (item.canDrill) {
+                          if (item.level === 'country') {
+                            setSelectedCountry(item.name);
+                          } else if (item.level === 'state') {
+                            setSelectedState(item.name);
+                          }
+                        }
+                      }}
+                    >
+                      {item.name}
+                    </span>
+                  </div>
+                  <div className="checkbox-right">
+                    <span className="filter-count">{item.count}</span>
+                    {item.canDrill && (
+                      <button
+                        type="button"
+                        className="drill-arrow-btn"
+                        title={`View ${item.level === 'country' ? 'states' : 'cities'}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (item.level === 'country') {
+                            setSelectedCountry(item.name);
+                          } else if (item.level === 'state') {
+                            setSelectedState(item.name);
+                          }
+                        }}
+                      >
+                        ›
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      {/* 2. DATE POSTED CHECKBOXES */}
+      <div className="filter-group">
+        <div className="filter-group-title">
+          <span>🗓️</span> Date Posted
+        </div>
         <div className="filter-options-list">
-          {locationsList.map((loc) => {
-            const isChecked = selectedLocations.includes(loc);
+          {datesList.map((dt) => {
+            const isChecked = selectedDates.includes(dt);
             return (
-              <label key={loc} className={`checkbox-label ${isChecked ? 'checked' : ''}`}>
+              <label key={dt} className={`checkbox-label ${isChecked ? 'checked' : ''}`}>
                 <div className="checkbox-left">
                   <input
                     type="checkbox"
                     className="checkbox-input"
                     checked={isChecked}
-                    onChange={() => onToggleLocation(loc)}
+                    onChange={() => onToggleDate && onToggleDate(dt)}
                   />
-                  <span>{loc}</span>
+                  <span>{dt}</span>
                 </div>
-                <span className="filter-count">{locationCounts[loc]}</span>
+                <span className="filter-count">{dateCounts[dt] || 0}</span>
               </label>
             );
           })}
         </div>
       </div>
 
-      {/* 2. SALARY (RUPEE ₹ LPA) CHECKBOXES */}
+      {/* 3. SALARY CHECKBOXES */}
       <div className="filter-group">
         <div className="filter-group-title">
-          <span>💵</span> Salary (Rupees ₹ LPA)
+          <span>💵</span> Salary Info
         </div>
         <div className="filter-options-list">
           {salariesList.map((sal) => {
@@ -203,7 +485,7 @@ const FilterSidebar = ({
         </div>
       </div>
 
-      {/* 3. WORK MODE CHECKBOXES (Remote / On-site / Hybrid) */}
+      {/* 3. WORK MODE CHECKBOXES */}
       <div className="filter-group">
         <div className="filter-group-title">
           <span>🏠</span> Work Mode
@@ -229,7 +511,7 @@ const FilterSidebar = ({
         </div>
       </div>
 
-      {/* 4. SHIFT CHECKBOXES (Day Shift / Night Shift / Flexible) */}
+      {/* 4. SHIFT CHECKBOXES */}
       <div className="filter-group">
         <div className="filter-group-title">
           <span>☀️</span> Shift Type
@@ -281,7 +563,7 @@ const FilterSidebar = ({
         </div>
       </div>
 
-      {/* 6. EXPERIENCE CHECKBOXES (Single Year Match, Not Range) */}
+      {/* 6. EXPERIENCE CHECKBOXES */}
       <div className="filter-group">
         <div className="filter-group-title">
           <span>💼</span> Experience (Single Year)
@@ -339,3 +621,4 @@ const FilterSidebar = ({
 };
 
 export default FilterSidebar;
+

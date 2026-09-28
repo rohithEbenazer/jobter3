@@ -314,10 +314,10 @@ async function fetchAllCoforgeJobs() {
 
     let page = 1;
     let hasMore = true;
+    const maxPages = process.env.VERCEL ? 5 : 20;
 
-    while (hasMore) {
+    while (hasMore && page <= maxPages) {
       const data = await fetchCoforgePage(page);
-
 
       const rawJobs = Array.isArray(data?.data?.data)
         ? data.data.data
@@ -346,10 +346,7 @@ async function fetchAllCoforgeJobs() {
         hasMore = false;
       } else {
         page++;
-
-        await new Promise(resolve =>
-          setTimeout(resolve, 300)
-        );
+        await new Promise(resolve => setTimeout(resolve, 50));
       }
     }
 

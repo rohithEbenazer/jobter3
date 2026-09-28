@@ -1,0 +1,8 @@
+CogForce / Coforge Live Sync API Routes
+
+No.  Endpoint URL                                   Method  Status   Description & Test Result
+1    http://localhost:5000/api/jobs/cogforce       GET     200 OK   Live API Fetch: Fetches live jobs directly from Coforge Careers API (Fetched 111 live jobs).
+2    http://localhost:5000/api/jobs/coforge        GET     200 OK   Live Alias Route: Backwards-compatible route for live Coforge jobs (Fetched 111 live jobs).
+3    http://localhost:5000/api/jobs/cogforce/sync   POST    200 OK   Live DB Sync: Triggers sync of live Coforge jobs to MongoDB (111 inserted/updated, 0 errors).
+4    http://localhost:5000/api/jobs/cogforce/db     GET     200 OK   Database Query: Queries stored Cogforce jobs from MongoDB (Total: 111 jobs in DB).
+5    http://localhost:5000/api/jobs/cogforce/:id    GET     200 OK   Single Job Lookup: Retrieves detailed job record by ID (e.g. /api/jobs/cogforce/1152247).

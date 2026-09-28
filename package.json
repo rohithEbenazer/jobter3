@@ -1,0 +1,8 @@
+{
+  "name": "job777",
+  "version": "1.0.0",
+  "description": "Job777 root package",
+  "scripts": {
+    "start": "cd backend && node server.js"
+  }
+}

@@ -1,0 +1,12 @@
+/* ============================================================
+   HOME PAGE CONTAINER STYLES (HomePage.css)
+   ============================================================ */
+
+.home-page {
+  min-height: calc(100vh - 80px);
+}
+
+.main-container {
+  padding-top: 2rem;
+  padding-bottom: 4rem;
+}

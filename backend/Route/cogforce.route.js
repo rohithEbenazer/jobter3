@@ -33,7 +33,12 @@ router.get(['/', '/live'], async (req, res) => {
  */
 router.get('/db', async (req, res) => {
   if (mongoose.connection.readyState !== 1) {
-    return res.status(503).json({ success: false, error: 'MongoDB connection is not established.' });
+    try {
+      const liveJobs = await fetchAllCoforgeJobs();
+      return res.json({ success: true, total: liveJobs.length, page: 1, limit: liveJobs.length, jobs: liveJobs });
+    } catch (err) {
+      return res.status(503).json({ success: false, error: 'MongoDB connection is not established.' });
+    }
   }
   try {
     const { title, location, days, datePosted, limit = 50, page = 1 } = req.query;

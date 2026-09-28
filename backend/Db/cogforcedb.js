@@ -1,5 +1,5 @@
-// cogforcedb.js - MongoDB Schema & Connection Module for Cogforce / Coforge Jobs
-const mongoose = require('mongoose');
+// Support .env environment variables if present
+try { require('dotenv').config(); } catch (e) {}
 
 /**
  * Connect to MongoDB database
@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
  * @returns {Promise<mongoose.Connection>}
  */
 const connectDB = async (customUri) => {
-  const mongoURI = customUri || process.env.MONGODB_URI || 'mongodb://localhost:27017/cogforce';
+  const mongoURI = customUri || process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/cogforce';
   if (mongoose.connection.readyState >= 1) {
     return mongoose.connection;
   }

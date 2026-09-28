@@ -4,5 +4,8 @@
   "description": "Job777 root package",
   "scripts": {
     "start": "cd backend && node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5"
   }
 }

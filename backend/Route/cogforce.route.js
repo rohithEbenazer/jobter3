@@ -119,10 +119,14 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
   try {
     await connectDB();
   } catch (err) {
-    console.warn('[Sync Route] DB connection attempt error:', err.message);
+    console.error('[Sync Route] DB connection error:', err.message);
+    return res.status(500).json({
+      success: false,
+      error: `MongoDB Connection Error: ${err.message}. Please check MongoDB Atlas IP Whitelist (0.0.0.0/0) and MONGODB_URI.`
+    });
   }
   if (mongoose.connection.readyState !== 1) {
-    return res.status(503).json({ success: false, error: 'MongoDB connection is not established.' });
+    return res.status(503).json({ success: false, error: 'MongoDB connection is not established. Please verify MONGODB_URI environment variable in Vercel.' });
   }
   try {
     const summary = await syncCogforceJobsWithDb(CogforceJob);

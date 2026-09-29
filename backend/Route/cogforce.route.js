@@ -35,11 +35,12 @@ router.get('/db', async (req, res) => {
   try {
     await connectDB();
   } catch (err) {
-    console.warn('[DB Route] Connect DB failed:', err.message);
+    console.error('[DB Route] Connect DB failed:', err.message);
+    return res.status(500).json({ success: false, error: `MongoDB Connection Error: ${err.message}` });
   }
 
   if (mongoose.connection.readyState !== 1) {
-    return res.json({ success: true, total: 0, page: 1, limit: 50, jobs: [] });
+    return res.status(503).json({ success: false, error: 'MongoDB connection is not established.' });
   }
   try {
     const { title, location, days, datePosted, limit = 50, page = 1 } = req.query;

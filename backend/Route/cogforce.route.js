@@ -9,7 +9,7 @@ const {
   syncCogforceJobsWithDb
 } = require('../api/cogforce.api');
 
-const { CogforceJob } = require('../Db/cogforcedb');
+const { connectDB, CogforceJob } = require('../Db/cogforcedb');
 
 /**
  * @route   GET /api/jobs/cogforce
@@ -116,6 +116,11 @@ router.get('/db', async (req, res) => {
  * @access  Public
  */
 router.post(['/sync', '/dbsync'], async (req, res) => {
+  try {
+    await connectDB();
+  } catch (err) {
+    console.warn('[Sync Route] DB connection attempt error:', err.message);
+  }
   if (mongoose.connection.readyState !== 1) {
     return res.status(503).json({ success: false, error: 'MongoDB connection is not established.' });
   }

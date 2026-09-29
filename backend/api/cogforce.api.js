@@ -309,9 +309,14 @@ function mapCoforgeJobs(rawItem) {
  */
 async function fetchAllCoforgeJobs() {
   try {
-    const maxPages = process.env.VERCEL ? 3 : 10;
-    const pagePromises = [];
-    for (let p = 1; p <= maxPages; p++) {
+    const firstPageData = await fetchCoforgePage(1);
+    if (!firstPageData) return [];
+
+    const totalCount = firstPageData?.data?.totalCount;
+    const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+
+    const pagePromises = [Promise.resolve(firstPageData)];
+    for (let p = 2; p <= totalPages; p++) {
       pagePromises.push(fetchCoforgePage(p));
     }
 

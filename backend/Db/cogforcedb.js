@@ -5,6 +5,8 @@ try { dotenv.config(); } catch (e) {}
 
 const DEFAULT_ATLAS_URI = 'mongodb+srv://rohithebenazer34_db_user:BP96hXyxBZWLU1Pm@job777.nwlfd54.mongodb.net/job777?retryWrites=true&w=majority&appName=job777';
 
+let isConnectingPromise = null;
+
 /**
  * Connect to MongoDB database
  * @param {string} [customUri] Optional MongoDB URI override
@@ -12,19 +14,26 @@ const DEFAULT_ATLAS_URI = 'mongodb+srv://rohithebenazer34_db_user:BP96hXyxBZWLU1
  */
 const connectDB = async (customUri) => {
   const mongoURI = customUri || process.env.MONGODB_URI || DEFAULT_ATLAS_URI;
-  if (mongoose.connection.readyState >= 1) {
+  if (mongoose.connection.readyState === 1) {
+    return mongoose.connection;
+  }
+  if (isConnectingPromise) {
+    await isConnectingPromise;
     return mongoose.connection;
   }
   try {
-    const conn = await mongoose.connect(mongoURI, {
+    isConnectingPromise = mongoose.connect(mongoURI, {
       serverSelectionTimeoutMS: 10000,
       connectTimeoutMS: 10000
     });
+    const conn = await isConnectingPromise;
     console.log(`[Cogforce DB] MongoDB Connected: ${conn.connection.host}`);
     return conn.connection;
   } catch (error) {
     console.error(`[Cogforce DB] Database connection error: ${error.message}`);
     throw error;
+  } finally {
+    isConnectingPromise = null;
   }
 };
 

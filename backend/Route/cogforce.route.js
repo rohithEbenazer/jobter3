@@ -127,7 +127,10 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
     });
   }
   if (mongoose.connection.readyState !== 1) {
-    return res.status(503).json({ success: false, error: 'MongoDB connection is not established. Please verify MONGODB_URI environment variable in Vercel.' });
+    return res.status(503).json({
+      success: false,
+      error: `MongoDB connection state is ${mongoose.connection.readyState} (Expected 1=Connected). Please check MONGODB_URI in Vercel environment variables.`
+    });
   }
   try {
     const summary = await syncCogforceJobsWithDb(CogforceJob);

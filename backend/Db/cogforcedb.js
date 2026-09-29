@@ -23,8 +23,9 @@ const connectDB = async (customUri) => {
   }
   try {
     isConnectingPromise = mongoose.connect(mongoURI, {
-      serverSelectionTimeoutMS: 10000,
-      connectTimeoutMS: 10000
+      serverSelectionTimeoutMS: 15000,
+      connectTimeoutMS: 15000,
+      family: 4
     });
     const conn = await isConnectingPromise;
     console.log(`[Cogforce DB] MongoDB Connected: ${conn.connection.host}`);

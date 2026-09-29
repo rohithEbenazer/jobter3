@@ -120,10 +120,12 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
   try {
     await connectDB();
   } catch (err) {
+    const rawUri = process.env.MONGODB_URI || 'DEFAULT_ATLAS_URI';
+    const maskedUri = rawUri.replace(/:([^:@]+)@/, ':****@');
     console.error('[Sync Route] DB connection error:', err.message);
     return res.status(500).json({
       success: false,
-      error: `MongoDB Connection Error: ${err.message}. Please check MongoDB Atlas IP Whitelist (0.0.0.0/0) and MONGODB_URI.`
+      error: `MongoDB Connection Error: ${err.message}. (URI Source: ${process.env.MONGODB_URI ? 'Vercel env' : 'Default'}, Target: ${maskedUri})`
     });
   }
   if (mongoose.connection.readyState !== 1) {

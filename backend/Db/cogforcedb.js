@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 try { dotenv.config(); } catch (e) {}
 
-const DEFAULT_ATLAS_URI = 'mongodb+srv://rohithebenazer34_db_user:O2u61ChzAMan3qSP@job777.nwlfd54.mongodb.net/job777?retryWrites=true&w=majority&appName=job777';
+const DEFAULT_ATLAS_URI = 'mongodb+srv://rohithebenazer34_db_user:BP96hXyxBZWLU1Pm@job777.nwlfd54.mongodb.net/job777?retryWrites=true&w=majority&appName=job777';
 
 /**
  * Connect to MongoDB database

@@ -3,9 +3,14 @@
   "version": "1.0.0",
   "description": "Job777 root package",
   "scripts": {
-    "start": "cd backend && node server.js"
+    "start": "cd backend && node server.js",
+    "build": "cd frontend && npm install && npm run build"
   },
   "dependencies": {
-    "dotenv": "^16.4.5"
+    "axios": "^1.20.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.22.3",
+    "form-data": "^4.0.6",
+    "mongoose": "^8.24.4"
   }
 }

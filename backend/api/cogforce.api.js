@@ -340,7 +340,6 @@ async function fetchAllCoforgeJobs() {
 
         jobIds.add(job.id);
         allJobs.push(job);
-        console.log(`[Coforge Job ID]: ${job.id} | Title: ${job.title}`);
       }
     }
 

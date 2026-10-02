@@ -46,7 +46,7 @@ router.get('/db', async (req, res) => {
     return res.status(503).json({ success: false, error: 'MongoDB connection is not established.' });
   }
   try {
-    const { title, location, days, datePosted, limit = 50, page = 1 } = req.query;
+    const { title, location, days, datePosted, limit = 5000, page = 1 } = req.query;
     const filter = { source: 'Microsoft' };
 
     if (title) {
@@ -153,7 +153,8 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
     });
   }
   try {
-    const summary = await syncMicrosoftJobsWithDb(MicrosoftJob || CogforceJob);
+    const limit = (req.query.limit || req.body.limit) ? parseInt(req.query.limit || req.body.limit) : null;
+    const summary = await syncMicrosoftJobsWithDb(MicrosoftJob || CogforceJob, limit);
     res.json(summary);
   } catch (err) {
     console.error('Error during Microsoft DB sync:', err.message);

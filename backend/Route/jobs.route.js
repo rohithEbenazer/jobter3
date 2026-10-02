@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const { fetchAllCoforgeJobs, syncCogforceJobsWithDb } = require('../api/cogforce.api');
 const { fetchAllMicrosoftJobs, syncMicrosoftJobsWithDb } = require('../api/microsoft.api');
 const { connectDB, CogforceJob } = require('../Db/cogforcedb');
+const { MicrosoftJob } = require('../Db/microsoftdb');
 
 /**
  * Helper to normalize company query param
@@ -69,7 +70,7 @@ router.get('/db', async (req, res) => {
   }
 
   try {
-    const { company, source, title, location, days, datePosted, limit = 1000, page = 1 } = req.query;
+    const { company, source, title, location, days, datePosted, limit = 5000, page = 1 } = req.query;
     const filter = {};
 
     // Company filter (Coforge / Microsoft / All)
@@ -114,19 +115,43 @@ router.get('/db', async (req, res) => {
     const pageNum = parseInt(page, 10);
     const skip = (pageNum - 1) * limitNum;
 
-    const jobs = await CogforceJob.find(filter)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limitNum);
+    let allDbJobs = [];
+    const queryMicrosoft = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'microsoft');
+    const queryCoforge = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'coforge');
 
-    const total = await CogforceJob.countDocuments(filter);
+    const tasks = [];
+    if (queryCoforge && CogforceJob) {
+      tasks.push(CogforceJob.find(filter).sort({ createdAt: -1 }));
+    }
+    if (queryMicrosoft && MicrosoftJob) {
+      tasks.push(MicrosoftJob.find(filter).sort({ createdAt: -1 }));
+    }
+
+    const results = await Promise.all(tasks);
+    results.forEach(arr => {
+      if (Array.isArray(arr)) allDbJobs.push(...arr.map(j => (j.toObject ? j.toObject() : j)));
+    });
+
+    // Deduplicate by jobId if needed
+    const seenIds = new Set();
+    const uniqueJobs = [];
+    for (const job of allDbJobs) {
+      const idKey = String(job.jobId || job.id);
+      if (idKey && !seenIds.has(idKey)) {
+        seenIds.add(idKey);
+        uniqueJobs.push(job);
+      }
+    }
+
+    const total = uniqueJobs.length;
+    const paginatedJobs = limitNum > 0 ? uniqueJobs.slice(skip, skip + limitNum) : uniqueJobs;
 
     res.json({
       success: true,
       total,
       page: pageNum,
       limit: limitNum,
-      jobs
+      jobs: paginatedJobs
     });
   } catch (err) {
     console.error('Error fetching jobs from DB:', err.message);
@@ -151,8 +176,9 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
   }
 
   try {
-    const { company = 'All' } = req.body || req.query;
+    const { company = 'All', limit: limitParam } = { ...(req.query || {}), ...(req.body || {}) };
     const selectedCompanies = parseCompanyFilter(company);
+    const limit = limitParam ? parseInt(limitParam) : null;
 
     const syncCoforge = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'coforge');
     const syncMicrosoft = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'microsoft');
@@ -164,7 +190,7 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
       coforgeStats = await syncCogforceJobsWithDb(CogforceJob);
     }
     if (syncMicrosoft) {
-      microsoftStats = await syncMicrosoftJobsWithDb(CogforceJob);
+      microsoftStats = await syncMicrosoftJobsWithDb(MicrosoftJob || CogforceJob, limit);
     }
 
     const totalFetchedRaw = (coforgeStats?.stats?.totalFetchedRaw || 0) + (microsoftStats?.stats?.totalFetchedRaw || 0);

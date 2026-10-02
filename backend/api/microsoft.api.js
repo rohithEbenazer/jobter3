@@ -24,15 +24,22 @@ const DEFAULT_HEADERS = {
 async function fetchMicrosoftPage(start = 0, query = "", location = "") {
   const url = `${MICROSOFT_SEARCH_API}?domain=microsoft.com&query=${encodeURIComponent(query)}&location=${encodeURIComponent(location)}&start=${start}&sort_by=timestamp`;
 
-  for (let attempt = 1; attempt <= 3; attempt++) {
+  for (let attempt = 1; attempt <= 5; attempt++) {
     try {
       if (typeof fetch !== "undefined") {
         const res = await fetch(url, { headers: DEFAULT_HEADERS });
         if (res.status === 429) {
-          await delay(1000 * attempt);
+          const waitTime = Math.round(1200 * Math.pow(1.3, attempt - 1) + Math.random() * 500);
+          if (attempt >= 4) {
+            console.warn(`[Microsoft API] Rate limited (429) on attempt ${attempt}. Retrying in ${waitTime}ms...`);
+          }
+          await delay(waitTime);
           continue;
         }
-        if (!res.ok) return null;
+        if (!res.ok) {
+          console.warn(`[Microsoft API] Request failed with HTTP ${res.status} ${res.statusText} at start=${start}`);
+          return null;
+        }
         const data = await res.json();
         return data;
       } else {
@@ -43,8 +50,12 @@ async function fetchMicrosoftPage(start = 0, query = "", location = "") {
         return response.data;
       }
     } catch (error) {
-      if (attempt < 3) await delay(800 * attempt);
-      else console.warn(`[Microsoft API] Error fetching page at start=${start}:`, error.message);
+      if (attempt < 5) {
+        const waitTime = Math.round(800 * attempt + Math.random() * 300);
+        await delay(waitTime);
+      } else {
+        console.warn(`[Microsoft API] Error fetching page at start=${start}:`, error.message);
+      }
     }
   }
   return null;
@@ -266,7 +277,21 @@ function buildExperienceResult(matches, source) {
  * 4. General Qualifications (Fresher OR Experience)
  * 5. Fallback (Not specified)
  */
-function extractExperienceFromMicrosoft(jobDescription = "") {
+function extractExperienceFromMicrosoft(jobDescription = "", jobTitle = "") {
+  // 0. Check Job Title for Intern / Fresher / Entry Level
+  const titleLower = String(jobTitle || '').toLowerCase();
+  if (/\b(?:intern|internship|fresher|graduate\s+trainee|university\s+recruiting|entry\s+level|apprentice)\b/i.test(titleLower)) {
+    return {
+      qualification: "Job Title",
+      experienceRequired: "0 years",
+      minYears: 0,
+      maxYears: 0,
+      experienceLevel: "Fresher",
+      experienceSource: "Job Title",
+      allExperienceRequirements: [{ min: 0, max: 0, text: "0 years" }]
+    };
+  }
+
   if (!jobDescription) {
     return {
       qualification: "Not specified",
@@ -274,7 +299,7 @@ function extractExperienceFromMicrosoft(jobDescription = "") {
       minYears: 0,
       maxYears: null,
       experienceLevel: "Not specified",
-      experienceSource: null,
+      experienceSource: "Not specified",
       allExperienceRequirements: []
     };
   }
@@ -382,6 +407,14 @@ function extractExperienceFromMicrosoft(jobDescription = "") {
   }
 
   // -----------------------------------------------------------------
+  // STEP 4.5: Entire Description Fallback Check
+  // -----------------------------------------------------------------
+  const fullMatches = parseExperiencePhrase(cleanText);
+  if (fullMatches.length > 0) {
+    return buildExperienceResult(fullMatches, "Full Description");
+  }
+
+  // -----------------------------------------------------------------
   // STEP 5: Fallback -> Not specified
   // -----------------------------------------------------------------
   return {
@@ -390,7 +423,7 @@ function extractExperienceFromMicrosoft(jobDescription = "") {
     minYears: 0,
     maxYears: null,
     experienceLevel: "Not specified",
-    experienceSource: null,
+    experienceSource: "Not specified",
     allExperienceRequirements: []
   };
 }
@@ -657,9 +690,8 @@ function parseMicrosoftLocations(locations = [], standardizedLocations = []) {
 function mapMicrosoftJobs(rawItem, detailsObj = null) {
   if (!rawItem) return null;
 
-  const jobId = String(rawItem.id || rawItem.atsJobId || rawItem.displayJobId || '');
+  const jobId = String(rawItem.id || detailsObj?.id || '');
   const title = rawItem.name || detailsObj?.name || "Microsoft Opening";
-  console.log(`[Microsoft Job ID]: ${jobId} | Company: Microsoft | Title: ${title}`);
 
   const details = detailsObj || {};
 
@@ -711,10 +743,10 @@ function mapMicrosoftJobs(rawItem, detailsObj = null) {
   const plainDescription = rawHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 
   // Experience extraction using extractExperienceFromMicrosoft (section & phrase parsing)
-  const expResult = extractExperienceFromMicrosoft(rawHtml);
+  const expResult = extractExperienceFromMicrosoft(rawHtml, title);
   const minExp = expResult.minYears !== null && expResult.minYears !== undefined ? expResult.minYears : 0;
   const maxExp = expResult.maxYears;
-  const yrsOfExperience = expResult.experienceRequired || "Not specified";
+  const yrsOfExperience = (expResult.experienceRequired && expResult.experienceRequired !== "Not specified") ? expResult.experienceRequired : "Not specified";
 
   // Skills & Role
   const skillsSet = new Set();
@@ -768,8 +800,6 @@ function mapMicrosoftJobs(rawItem, detailsObj = null) {
     location: parsedLocs.location,
     minYears: minExp,
     maxYears: expResult.maxYears,
-    minYrsOfExperience: minExp,
-    maxYrsOfExperience: expResult.maxYears !== null && expResult.maxYears !== undefined ? expResult.maxYears : 99,
     yrsOfExperience: yrsOfExperience,
     qualification: expResult.qualification || expResult.experienceLevel,
     experienceLevel: expResult.experienceLevel || expResult.qualification,
@@ -822,25 +852,48 @@ async function fetchAllMicrosoftJobs(optionsOrLimit = null) {
       return [];
     }
 
-    const totalAvailable = firstPage.data.count || firstPage.data.positions.length;
+    const totalAvailable = firstPage.data.count;
     const fetchLimit = maxLimit ? Math.min(totalAvailable, maxLimit) : totalAvailable;
 
     let allPositions = [...firstPage.data.positions];
 
-    // Fetch search pages in concurrent chunks of 15 pages
-    const CHUNK_SIZE = 15;
+    // Fetch search pages in small chunks of 2 pages with 200ms delay to respect Microsoft API rate limits
+    const CHUNK_SIZE = 2;
     for (let start = 10; start < fetchLimit; start += CHUNK_SIZE * 10) {
       const pagePromises = [];
       for (let s = start; s < Math.min(fetchLimit, start + CHUNK_SIZE * 10); s += 10) {
         pagePromises.push(fetchMicrosoftPage(s));
       }
       const pageResults = await Promise.all(pagePromises);
+      let failedInChunk = 0;
       for (const res of pageResults) {
         if (res && res.data && Array.isArray(res.data.positions)) {
           allPositions.push(...res.data.positions);
+        } else {
+          failedInChunk++;
         }
       }
-      await delay(50);
+      if (failedInChunk >= CHUNK_SIZE) {
+        console.warn(`[Microsoft API] Rate limit pause at start=${start}. Cooling down for 3s...`);
+        await delay(3000);
+        const retryPromises = [];
+        for (let s = start; s < Math.min(fetchLimit, start + CHUNK_SIZE * 10); s += 10) {
+          retryPromises.push(fetchMicrosoftPage(s));
+        }
+        const retryResults = await Promise.all(retryPromises);
+        let retryCount = 0;
+        for (const res of retryResults) {
+          if (res && res.data && Array.isArray(res.data.positions)) {
+            allPositions.push(...res.data.positions);
+            retryCount++;
+          }
+        }
+        if (retryCount === 0) {
+          console.warn(`[Microsoft API] Stopped pagination at start=${start}. Processing ${allPositions.length} fetched jobs.`);
+          break;
+        }
+      }
+      await delay(250);
     }
 
     // Deduplicate positions
@@ -887,13 +940,13 @@ async function fetchAllMicrosoftJobs(optionsOrLimit = null) {
 
 /**
  * Step 5: Sync Microsoft jobs with MongoDB collection
- * @param {object} CogforceJobModel Mongoose model for CogforceJob
+ * @param {object} MicrosoftJobModel Mongoose model for MicrosoftJob
  * @param {number|object|null} [optionsOrLimit=null] Optional limit or options
  * @returns {Promise<object>} Sync operation result summary
  */
-async function syncMicrosoftJobsWithDb(CogforceJobModel, optionsOrLimit = null) {
-  if (!CogforceJobModel) {
-    throw new Error("CogforceJob model is required for database sync.");
+async function syncMicrosoftJobsWithDb(MicrosoftJobModel, optionsOrLimit = null) {
+  if (!MicrosoftJobModel) {
+    throw new Error("MicrosoftJob model is required for database sync.");
   }
 
   console.log("[Microsoft Sync] Starting Microsoft jobs DB sync...");
@@ -909,13 +962,13 @@ async function syncMicrosoftJobsWithDb(CogforceJobModel, optionsOrLimit = null) 
   }
 
   const apiJobIdsSet = new Set(fetchedJobs.map(j => String(j.jobId)));
-  const existingDbJobs = await CogforceJobModel.find({ source: "Microsoft" }, { jobId: 1, _id: 1 });
+  const existingDbJobs = await MicrosoftJobModel.find({ source: "Microsoft" }, { jobId: 1, _id: 1 });
   const existingDbIdsSet = new Set(existingDbJobs.map(j => String(j.jobId)));
 
   const obsoleteIds = Array.from(existingDbIdsSet).filter(id => !apiJobIdsSet.has(id));
   let deletedCount = 0;
   if (obsoleteIds.length > 0) {
-    const delRes = await CogforceJobModel.deleteMany({ source: "Microsoft", jobId: { $in: obsoleteIds } });
+    const delRes = await MicrosoftJobModel.deleteMany({ source: "Microsoft", jobId: { $in: obsoleteIds } });
     deletedCount = delRes.deletedCount || 0;
   }
 
@@ -940,10 +993,10 @@ async function syncMicrosoftJobsWithDb(CogforceJobModel, optionsOrLimit = null) 
   }
 
   if (bulkOps.length > 0) {
-    await CogforceJobModel.bulkWrite(bulkOps);
+    await MicrosoftJobModel.bulkWrite(bulkOps);
   }
 
-  const finalDbCount = await CogforceJobModel.countDocuments({ source: "Microsoft" });
+  const finalDbCount = await MicrosoftJobModel.countDocuments({ source: "Microsoft" });
 
   return {
     success: true,
@@ -955,7 +1008,8 @@ async function syncMicrosoftJobsWithDb(CogforceJobModel, optionsOrLimit = null) 
       insertedToDb: insertedCount,
       updatedOrKeptInDb: updatedCount,
       finalDbCount: finalDbCount
-    }
+    },
+    jobs: fetchedJobs
   };
 }
 

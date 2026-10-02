@@ -110,7 +110,7 @@ const LivePreviewModal = ({ initialCompany = 'All', onClose, showToast }) => {
                   <td><code>{j.jobId || j.id}</code></td>
                   <td><strong>{j.title}</strong></td>
                   <td>{j.location || 'Not specified'}</td>
-                  <td>{j.yrsOfExperience || 'N/A'}</td>
+                  <td>{j.yrsOfExperience || 'Not specified'}</td>
                   <td><span className="tag">{j.workmode || 'On-site'}</span></td>
                   <td>
                     <a href={j.jobUrl} target="_blank" rel="noreferrer" className="btn btn-secondary btn-small">

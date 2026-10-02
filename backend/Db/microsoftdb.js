@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 try { dotenv.config(); } catch (e) {}
 
-const DEFAULT_ATLAS_URI = 'mongodb+srv://rohithebenazer34_db_user:BP96hXyxBZWLU1Pm@job777.nwlfd54.mongodb.net/job777?retryWrites=true&w=majority&appName=job777';
+const DEFAULT_ATLAS_URI = 'mongodb+srv://rohithebenazer34_db_user:kaJXBrC82BKNyZuK@job777.nwlfd54.mongodb.net/job777?retryWrites=true&w=majority&appName=job777';
 
 let isConnectingPromise = null;
 
@@ -63,7 +63,7 @@ const microsoftJobSchema = new mongoose.Schema(
     overview: { type: String, default: '' },
     details: { type: String, default: '' },
     experienceRequired: { type: String, default: 'Not specified' },
-    yrsOfExperience: { type: String, default: '' },
+    yrsOfExperience: { type: String, default: 'Not specified' },
     minYears: { type: Number, default: 0 },
     maxYears: { type: Number, default: 99 },
     minYrsOfExperience: { type: Number, default: 0 },

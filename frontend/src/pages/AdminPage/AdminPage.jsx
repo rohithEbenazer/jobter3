@@ -7,7 +7,8 @@ import './AdminPage.css';
 import { API_BASE } from '../../utils/apiConfig';
 
 const AdminPage = ({ onViewDetails, showToast }) => {
-  const [livePreviewCompany, setLivePreviewCompany] = useState(null); // null | 'All' | 'Coforge' | 'Microsoft'
+  const [targetCompany, setTargetCompany] = useState('All');
+  const [livePreviewCompany, setLivePreviewCompany] = useState(null); // null | 'All' | 'Coforge' | 'Microsoft' | 'Amazon'
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalJobs, setTotalJobs] = useState(0);
@@ -22,6 +23,9 @@ const AdminPage = ({ onViewDetails, showToast }) => {
       const url = new URL(`${API_BASE}/db`, window.location.origin);
       url.searchParams.append('page', pageNum);
       url.searchParams.append('limit', 12);
+      if (targetCompany && targetCompany !== 'All') {
+        url.searchParams.append('company', targetCompany);
+      }
       if (searchTitle) url.searchParams.append('title', searchTitle);
       if (searchLoc) url.searchParams.append('location', searchLoc);
 
@@ -47,7 +51,7 @@ const AdminPage = ({ onViewDetails, showToast }) => {
 
   useEffect(() => {
     fetchDbJobs(1);
-  }, [searchTitle, searchLoc]);
+  }, [targetCompany, searchTitle, searchLoc]);
 
   const scrollToJobsTop = () => {
     const el = document.querySelector('.jobs-section-bar') || document.querySelector('.admin-page .jobs-section');
@@ -69,12 +73,14 @@ const AdminPage = ({ onViewDetails, showToast }) => {
         <div className="role-badge-pill">
           <span className="badge-dot"></span> Super Admin Portal
         </div>
-        <h1>Coforge & Microsoft Live Sync & Command Center</h1>
+        <h1>Coforge, Microsoft & Amazon Live Sync & Command Center</h1>
         <p>Trigger live API extractions, execute MongoDB sync operations per company, and manage stored job listings.</p>
       </div>
 
       {/* Super Admin Live Sync Controls */}
       <AdminControls
+        selectedCompany={targetCompany}
+        onSelectCompany={setTargetCompany}
         onSyncSuccess={() => fetchDbJobs(1)}
         onOpenLivePreview={(comp) => setLivePreviewCompany(comp || 'All')}
         showToast={showToast}

@@ -5,8 +5,10 @@ const mongoose = require('mongoose');
 
 const { fetchAllCoforgeJobs, syncCogforceJobsWithDb } = require('../api/cogforce.api');
 const { fetchAllMicrosoftJobs, syncMicrosoftJobsWithDb } = require('../api/microsoft.api');
+const { fetchAllAmazonJobs, syncAmazonJobsWithDb } = require('../api/amazon.api');
 const { connectDB, CogforceJob } = require('../Db/cogforcedb');
 const { MicrosoftJob } = require('../Db/microsoftdb');
+const { AmazonJob } = require('../Db/amazondb');
 
 /**
  * Helper to normalize company query param
@@ -36,10 +38,12 @@ router.get(['/live', '/'], async (req, res) => {
 
     const fetchCoforge = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'coforge');
     const fetchMicrosoft = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'microsoft');
+    const fetchAmazon = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'amazon');
 
     const tasks = [];
     if (fetchCoforge) tasks.push(fetchAllCoforgeJobs());
     if (fetchMicrosoft) tasks.push(fetchAllMicrosoftJobs({ maxJobs: parseInt(maxJobs, 10) }));
+    if (fetchAmazon) tasks.push(fetchAllAmazonJobs({ maxJobs: parseInt(maxJobs, 10) }));
 
     const results = await Promise.all(tasks);
     results.forEach(arr => {
@@ -118,6 +122,7 @@ router.get('/db', async (req, res) => {
     let allDbJobs = [];
     const queryMicrosoft = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'microsoft');
     const queryCoforge = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'coforge');
+    const queryAmazon = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'amazon');
 
     const tasks = [];
     if (queryCoforge && CogforceJob) {
@@ -125,6 +130,9 @@ router.get('/db', async (req, res) => {
     }
     if (queryMicrosoft && MicrosoftJob) {
       tasks.push(MicrosoftJob.find(filter).sort({ createdAt: -1 }));
+    }
+    if (queryAmazon && AmazonJob) {
+      tasks.push(AmazonJob.find(filter).sort({ createdAt: -1 }));
     }
 
     const results = await Promise.all(tasks);
@@ -142,6 +150,13 @@ router.get('/db', async (req, res) => {
         uniqueJobs.push(job);
       }
     }
+
+    // Sort combined jobs across all sources chronologically (newest first)
+    uniqueJobs.sort((a, b) => {
+      const dateA = new Date(a.postedDate || a.postingDate || a.createdAt || 0).getTime();
+      const dateB = new Date(b.postedDate || b.postingDate || b.createdAt || 0).getTime();
+      return dateB - dateA;
+    });
 
     const total = uniqueJobs.length;
     const paginatedJobs = limitNum > 0 ? uniqueJobs.slice(skip, skip + limitNum) : uniqueJobs;
@@ -182,9 +197,11 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
 
     const syncCoforge = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'coforge');
     const syncMicrosoft = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'microsoft');
+    const syncAmazon = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'amazon');
 
     let coforgeStats = null;
     let microsoftStats = null;
+    let amazonStats = null;
 
     if (syncCoforge) {
       coforgeStats = await syncCogforceJobsWithDb(CogforceJob);
@@ -192,22 +209,26 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
     if (syncMicrosoft) {
       microsoftStats = await syncMicrosoftJobsWithDb(MicrosoftJob || CogforceJob, limit);
     }
+    if (syncAmazon) {
+      amazonStats = await syncAmazonJobsWithDb(AmazonJob || CogforceJob, limit);
+    }
 
-    const totalFetchedRaw = (coforgeStats?.stats?.totalFetchedRaw || 0) + (microsoftStats?.stats?.totalFetchedRaw || 0);
-    const insertedToDb = (coforgeStats?.stats?.insertedToDb || 0) + (microsoftStats?.stats?.insertedToDb || 0);
-    const updatedOrKeptInDb = (coforgeStats?.stats?.updatedOrKeptInDb || 0) + (microsoftStats?.stats?.updatedOrKeptInDb || 0);
+    const totalFetchedRaw = (coforgeStats?.stats?.totalFetchedRaw || 0) + (microsoftStats?.stats?.totalFetchedRaw || 0) + (amazonStats?.stats?.totalFetchedRaw || 0);
+    const insertedToDb = (coforgeStats?.stats?.insertedToDb || 0) + (microsoftStats?.stats?.insertedToDb || 0) + (amazonStats?.stats?.insertedToDb || 0);
+    const updatedOrKeptInDb = (coforgeStats?.stats?.updatedOrKeptInDb || 0) + (microsoftStats?.stats?.updatedOrKeptInDb || 0) + (amazonStats?.stats?.updatedOrKeptInDb || 0);
     const finalDbCount = await CogforceJob.countDocuments();
 
     res.json({
       success: true,
-      message: `DB sync completed for ${syncCoforge && syncMicrosoft ? 'All Companies (Coforge & Microsoft)' : (syncMicrosoft ? 'Microsoft' : 'Coforge')}.`,
+      message: `DB sync completed for ${selectedCompanies ? selectedCompanies.join(', ') : 'All Companies'}.`,
       stats: {
         totalFetchedRaw,
         insertedToDb,
         updatedOrKeptInDb,
         finalDbCount,
         coforge: coforgeStats?.stats || null,
-        microsoft: microsoftStats?.stats || null
+        microsoft: microsoftStats?.stats || null,
+        amazon: amazonStats?.stats || null
       }
     });
   } catch (err) {

@@ -150,7 +150,10 @@ const FilterSidebar = ({
     }
 
     // Company
-    const comp = job.company || 'Coforge';
+    let comp = job.company || job.source || 'Coforge';
+    if (/coforge|cogforce/i.test(comp)) comp = 'Coforge';
+    else if (/microsoft/i.test(comp)) comp = 'Microsoft';
+    else if (/amazon/i.test(comp)) comp = 'Amazon';
     companyCounts[comp] = (companyCounts[comp] || 0) + 1;
 
     // Workmode
@@ -206,7 +209,8 @@ const FilterSidebar = ({
   });
 
   const datesList = ['Last 24 Hours', 'Last 7 Days', 'Last 14 Days', 'Last 30 Days', 'More than 30 Days'];
-  const companiesList = Object.keys(companyCounts);
+  const defaultCompanies = ['Coforge', 'Microsoft', 'Amazon'];
+  const companiesList = Array.from(new Set([...defaultCompanies, ...Object.keys(companyCounts)]));
   const skillsList = Object.keys(skillCounts).sort((a, b) => skillCounts[b] - skillCounts[a]).slice(0, 12);
   const experiencesList = ['0 Years', '1 Year', '2 Years', '3 Years', '4 Years', '5+ Years'];
   const workmodesList = ['Remote', 'On-site', 'Hybrid'];
@@ -568,7 +572,7 @@ const FilterSidebar = ({
                   />
                   <span>{comp}</span>
                 </div>
-                <span className="filter-count">{companyCounts[comp]}</span>
+                <span className="filter-count">{companyCounts[comp] || 0}</span>
               </label>
             );
           })}

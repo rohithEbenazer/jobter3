@@ -10,3 +10,4 @@ export const API_HOST = import.meta.env.VITE_API_HOST || getBaseHost();
 export const API_BASE = `${API_HOST}/api/jobs`;
 export const COFORGE_API_BASE = `${API_HOST}/api/jobs/cogforce`;
 export const MICROSOFT_API_BASE = `${API_HOST}/api/jobs/microsoft`;
+export const AMAZON_API_BASE = `${API_HOST}/api/jobs/amazon`;

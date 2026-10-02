@@ -46,12 +46,14 @@ app.use(async (req, res, next) => {
 // 3. Import and Mount Routes
 const cogforceRouter = require('./Route/cogforce.route');
 const microsoftRouter = require('./Route/microsoft.route');
+const amazonRouter = require('./Route/amazon.route');
 const jobsRouter = require('./Route/jobs.route');
 
 // Dedicated company routes
 app.use('/api/jobs/cogforce', cogforceRouter);
 app.use('/api/jobs/coforge', cogforceRouter);
 app.use('/api/jobs/microsoft', microsoftRouter);
+app.use('/api/jobs/amazon', amazonRouter);
 
 // Primary unified jobs route: handles /api/jobs (db, sync, live, :id) with company filtering
 app.use('/api/jobs', jobsRouter);

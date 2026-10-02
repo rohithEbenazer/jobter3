@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './LivePreviewModal.css';
 
-import { API_BASE, COFORGE_API_BASE, MICROSOFT_API_BASE } from '../../utils/apiConfig';
+import { API_BASE, COFORGE_API_BASE, MICROSOFT_API_BASE, AMAZON_API_BASE } from '../../utils/apiConfig';
 
 const LivePreviewModal = ({ initialCompany = 'All', onClose, showToast }) => {
-  const [companyTab, setCompanyTab] = useState(initialCompany); // 'All' | 'Coforge' | 'Microsoft'
+  const [companyTab, setCompanyTab] = useState(initialCompany); // 'All' | 'Coforge' | 'Microsoft' | 'Amazon'
   const [liveJobs, setLiveJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,6 +20,8 @@ const LivePreviewModal = ({ initialCompany = 'All', onClose, showToast }) => {
           url = `${COFORGE_API_BASE}/live`;
         } else if (companyTab === 'Microsoft') {
           url = `${MICROSOFT_API_BASE}/live`;
+        } else if (companyTab === 'Amazon') {
+          url = `${AMAZON_API_BASE}/live`;
         }
 
         const res = await fetch(url);
@@ -67,6 +69,12 @@ const LivePreviewModal = ({ initialCompany = 'All', onClose, showToast }) => {
               onClick={() => setCompanyTab('Microsoft')}
             >
               Microsoft
+            </button>
+            <button
+              className={`modal-tab ${companyTab === 'Amazon' ? 'active' : ''}`}
+              onClick={() => setCompanyTab('Amazon')}
+            >
+              Amazon
             </button>
           </div>
         </div>

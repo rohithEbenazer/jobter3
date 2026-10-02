@@ -3,11 +3,14 @@ import './AdminControls.css';
 
 import { API_BASE } from '../../utils/apiConfig';
 
-const AdminControls = ({ onSyncSuccess, onOpenLivePreview, showToast }) => {
-  const [selectedCompany, setSelectedCompany] = useState('All'); // 'All' | 'Coforge' | 'Microsoft'
+const AdminControls = ({ selectedCompany = 'All', onSelectCompany, onSyncSuccess, onOpenLivePreview, showToast }) => {
   const [syncing, setSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState(null); // null | { type: 'loading'|'success'|'error', title: string, desc: string }
   const [stats, setStats] = useState(null);
+
+  const handleCompanyChange = (comp) => {
+    if (onSelectCompany) onSelectCompany(comp);
+  };
 
   const handleTriggerSync = async () => {
     setSyncing(true);
@@ -61,7 +64,7 @@ const AdminControls = ({ onSyncSuccess, onOpenLivePreview, showToast }) => {
       <div className="panel-header">
         <div className="panel-title-group">
           <h2>⚡ Super Admin Live Sync Controls</h2>
-          <p>Extract live postings from Coforge & Microsoft Careers APIs directly into MongoDB database.</p>
+          <p>Extract live postings from Coforge, Microsoft & Amazon Careers APIs directly into MongoDB database.</p>
         </div>
 
         {/* Company Selector Checkboxes */}
@@ -74,7 +77,7 @@ const AdminControls = ({ onSyncSuccess, onOpenLivePreview, showToast }) => {
                 name="companySync"
                 value="All"
                 checked={selectedCompany === 'All'}
-                onChange={() => setSelectedCompany('All')}
+                onChange={() => handleCompanyChange('All')}
               />
               🏢 All Companies
             </label>
@@ -84,7 +87,7 @@ const AdminControls = ({ onSyncSuccess, onOpenLivePreview, showToast }) => {
                 name="companySync"
                 value="Coforge"
                 checked={selectedCompany === 'Coforge'}
-                onChange={() => setSelectedCompany('Coforge')}
+                onChange={() => handleCompanyChange('Coforge')}
               />
               🔶 Coforge
             </label>
@@ -94,9 +97,19 @@ const AdminControls = ({ onSyncSuccess, onOpenLivePreview, showToast }) => {
                 name="companySync"
                 value="Microsoft"
                 checked={selectedCompany === 'Microsoft'}
-                onChange={() => setSelectedCompany('Microsoft')}
+                onChange={() => handleCompanyChange('Microsoft')}
               />
               🟦 Microsoft
+            </label>
+            <label className={`company-chip ${selectedCompany === 'Amazon' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="Amazon"
+                checked={selectedCompany === 'Amazon'}
+                onChange={() => handleCompanyChange('Amazon')}
+              />
+              🟠 Amazon
             </label>
           </div>
         </div>

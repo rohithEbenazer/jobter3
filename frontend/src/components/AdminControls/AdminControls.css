@@ -101,7 +101,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .sync-banner {
@@ -173,9 +175,17 @@
   font-weight: 800;
 }
 
-.stat-value.success { color: var(--success); }
-.stat-value.info { color: var(--info); }
-.stat-value.primary { color: #818cf8; }
+.stat-value.success {
+  color: var(--success);
+}
+
+.stat-value.info {
+  color: var(--info);
+}
+
+.stat-value.primary {
+  color: #818cf8;
+}
 
 @media (max-width: 768px) {
   .admin-panel {

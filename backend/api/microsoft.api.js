@@ -691,6 +691,7 @@ function mapMicrosoftJobs(rawItem, detailsObj = null) {
   if (!rawItem) return null;
 
   const jobId = String(rawItem.id || detailsObj?.id || '');
+  console.log(jobId);
   const title = rawItem.name || detailsObj?.name || "Microsoft Opening";
 
   const details = detailsObj || {};

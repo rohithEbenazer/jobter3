@@ -7,7 +7,7 @@ import './AdminPage.css';
 import { API_BASE } from '../../utils/apiConfig';
 
 const AdminPage = ({ onViewDetails, showToast }) => {
-  const [showLivePreview, setShowLivePreview] = useState(false);
+  const [livePreviewCompany, setLivePreviewCompany] = useState(null); // null | 'All' | 'Coforge' | 'Microsoft'
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalJobs, setTotalJobs] = useState(0);
@@ -69,21 +69,22 @@ const AdminPage = ({ onViewDetails, showToast }) => {
         <div className="role-badge-pill">
           <span className="badge-dot"></span> Super Admin Portal
         </div>
-        <h1>Coforge Live Sync & Admin Command Center</h1>
-        <p>Trigger live API extractions, execute MongoDB sync operations, and manage stored job listings.</p>
+        <h1>Coforge & Microsoft Live Sync & Command Center</h1>
+        <p>Trigger live API extractions, execute MongoDB sync operations per company, and manage stored job listings.</p>
       </div>
 
       {/* Super Admin Live Sync Controls */}
       <AdminControls
         onSyncSuccess={() => fetchDbJobs(1)}
-        onOpenLivePreview={() => setShowLivePreview(true)}
+        onOpenLivePreview={(comp) => setLivePreviewCompany(comp || 'All')}
         showToast={showToast}
       />
 
       {/* Live Stream Preview Modal */}
-      {showLivePreview && (
+      {livePreviewCompany && (
         <LivePreviewModal
-          onClose={() => setShowLivePreview(false)}
+          initialCompany={livePreviewCompany}
+          onClose={() => setLivePreviewCompany(null)}
           showToast={showToast}
         />
       )}
@@ -125,13 +126,13 @@ const AdminPage = ({ onViewDetails, showToast }) => {
         ) : jobs.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '4rem', background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)' }}>
             <h3>No Stored Jobs Found</h3>
-            <p style={{ color: 'var(--text-muted)' }}>Click "Trigger Live DB Sync" above to fetch and store live jobs in MongoDB.</p>
+            <p style={{ color: 'var(--text-muted)' }}>Select a company and click "Trigger DB Sync" above to fetch and store live jobs in MongoDB.</p>
           </div>
         ) : (
           <>
             <div className="jobs-grid">
               {jobs.map((j) => (
-                <JobCard key={j.jobId || j.id} job={j} onViewDetails={onViewDetails} />
+                <JobCard key={`${j.source}-${j.jobId || j.id}`} job={j} onViewDetails={onViewDetails} />
               ))}
             </div>
 

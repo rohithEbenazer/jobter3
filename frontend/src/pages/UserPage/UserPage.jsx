@@ -25,7 +25,7 @@ const UserPage = ({ onViewDetails, showToast }) => {
   const [page, setPage] = useState(1);
   const pageSize = 9;
 
-  // Fetch all stored DB jobs from MongoDB
+  // Fetch stored jobs with live fallback
   const fetchAllJobs = async () => {
     try {
       setLoading(true);
@@ -33,13 +33,38 @@ const UserPage = ({ onViewDetails, showToast }) => {
       url.searchParams.append('limit', 1000);
 
       const res = await fetch(url);
-      const data = await res.json();
-      if (data.success && Array.isArray(data.jobs)) {
+      const text = await res.text();
+      let data = {};
+      try {
+        data = JSON.parse(text);
+      } catch (jsonErr) {
+        console.warn('DB endpoint returned non-JSON, falling back to live jobs...');
+        const liveRes = await fetch(new URL(`${API_BASE}/live`, window.location.origin));
+        const liveText = await liveRes.text();
+        try {
+          const liveData = JSON.parse(liveText);
+          if (Array.isArray(liveData) && liveData.length > 0) {
+            setAllDbJobs(liveData);
+            return;
+          }
+        } catch (e) {}
+      }
+
+      if (data.success && Array.isArray(data.jobs) && data.jobs.length > 0) {
         setAllDbJobs(data.jobs);
+      } else {
+        // Fallback: Fetch live jobs if DB is empty
+        const liveRes = await fetch(new URL(`${API_BASE}/live`, window.location.origin));
+        const liveText = await liveRes.text();
+        try {
+          const liveData = JSON.parse(liveText);
+          if (Array.isArray(liveData) && liveData.length > 0) {
+            setAllDbJobs(liveData);
+          }
+        } catch (e) {}
       }
     } catch (err) {
       console.error('Fetch DB jobs error:', err);
-      showToast(`Error loading jobs: ${err.message}`, 'error');
     } finally {
       setLoading(false);
     }
@@ -122,13 +147,14 @@ const UserPage = ({ onViewDetails, showToast }) => {
   // COMBINED MULTI-FILTER LOGIC
   const filteredJobs = useMemo(() => {
     return allDbJobs.filter(job => {
-      // 1. Text Search Filter (Title / Role / Description)
+      // 1. Text Search Filter (Title / Role / Description / Company)
       if (searchTitle.trim()) {
         const q = searchTitle.toLowerCase().trim();
         const matchesTitle = String(job.title || '').toLowerCase().includes(q);
         const matchesRole = String(job.role || '').toLowerCase().includes(q);
         const matchesDesc = String(job.description || '').toLowerCase().includes(q);
-        if (!matchesTitle && !matchesRole && !matchesDesc) return false;
+        const matchesComp = String(job.company || job.source || '').toLowerCase().includes(q);
+        if (!matchesTitle && !matchesRole && !matchesDesc && !matchesComp) return false;
       }
 
       // 2. Location Checkbox Filter
@@ -137,7 +163,7 @@ const UserPage = ({ onViewDetails, showToast }) => {
         if (!matchesLoc) return false;
       }
 
-      // 3. Date Posted Checkbox Filter (1 Day, 7 Days, 14 Days, 30 Days, 30+ Days)
+      // 3. Date Posted Checkbox Filter
       if (selectedDates.length > 0) {
         const matchesDate = checkDateMatch(job, selectedDates);
         if (!matchesDate) return false;
@@ -149,7 +175,7 @@ const UserPage = ({ onViewDetails, showToast }) => {
         let jobMode = 'On-site';
         if (modeStr.includes('remote') || modeStr.includes('work from home') || modeStr.includes('wfh')) {
           jobMode = 'Remote';
-        } else if (modeStr.includes('hybrid')) {
+        } else if (modeStr.includes('hybrid') || modeStr.includes('50%')) {
           jobMode = 'Hybrid';
         }
         if (!selectedWorkmodes.includes(jobMode)) return false;
@@ -164,7 +190,7 @@ const UserPage = ({ onViewDetails, showToast }) => {
       // 6. Salary Checkbox Filter (Disclosed Salary vs Not Disclosed)
       if (selectedSalaries.length > 0) {
         const salStr = String(job.salary || '');
-        const isDisclosed = salStr && salStr !== 'Not Disclosed' && salStr !== 'Competitive Industry Package';
+        const isDisclosed = salStr && salStr !== 'Not Disclosed' && salStr !== 'Competitive Industry Package' && salStr !== 'Competitive Package';
 
         const matchesSal = selectedSalaries.some(s => {
           if (s === 'Disclosed Salary') return isDisclosed;
@@ -174,9 +200,9 @@ const UserPage = ({ onViewDetails, showToast }) => {
         if (!matchesSal) return false;
       }
 
-      // 7. Company Checkbox Filter
+      // 7. Company Checkbox Filter (Coforge / Microsoft)
       if (selectedCompanies.length > 0) {
-        const compStr = String(job.company || 'Coforge').toLowerCase();
+        const compStr = String(job.company || job.source || 'Coforge').toLowerCase();
         const matchesComp = selectedCompanies.some(c => compStr.includes(c.toLowerCase()));
         if (!matchesComp) return false;
       }
@@ -188,9 +214,9 @@ const UserPage = ({ onViewDetails, showToast }) => {
         if (!matchesSkill) return false;
       }
 
-      // 9. Single Experience Checkbox Filter (Not range, single year matching)
+      // 9. Single Experience Checkbox Filter (0 Years, 1 Year, 2 Years, 3 Years, 4 Years, 5+ Years)
       if (selectedExperiences.length > 0) {
-        const minExp = Number(job.minYrsOfExperience || job.minYears || 0);
+        const minExp = Number(job.minYrsOfExperience ?? job.minYears ?? 0);
         let expTag = '0 Years';
         if (minExp === 0) expTag = '0 Years';
         else if (minExp === 1) expTag = '1 Year';
@@ -233,8 +259,8 @@ const UserPage = ({ onViewDetails, showToast }) => {
         <div className="user-role-badge">
           <span className="badge-dot-green"></span> Candidate Career Portal
         </div>
-        <h1>Explore Verified Coforge Openings</h1>
-        <p>Use the combined multi-select filters on the left to filter openings by Location, Date Posted, Salary, Work Mode, Shift, Company, Skills, and Experience.</p>
+        <h1>Explore Verified Openings (Coforge & Microsoft)</h1>
+        <p>Use the combined multi-select filters on the left to filter openings by Company, Location, Date Posted, Salary, Work Mode, Shift, Skills, and Experience.</p>
       </div>
 
       {/* 2-Column Portal Layout */}
@@ -269,7 +295,7 @@ const UserPage = ({ onViewDetails, showToast }) => {
               <span className="search-icon">🔍</span>
               <input
                 type="text"
-                placeholder="Search job title, keywords or technology..."
+                placeholder="Search job title, keywords, company or technology..."
                 value={searchTitle}
                 onChange={(e) => setSearchTitle(e.target.value)}
               />
@@ -297,7 +323,7 @@ const UserPage = ({ onViewDetails, showToast }) => {
               <>
                 <div className="jobs-grid">
                   {paginatedJobs.map((j) => (
-                    <JobCard key={j.jobId || j.id} job={j} onViewDetails={onViewDetails} />
+                    <JobCard key={`${j.source}-${j.jobId || j.id}`} job={j} onViewDetails={onViewDetails} />
                   ))}
                 </div>
 

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './LivePreviewModal.css';
 
-import { API_BASE } from '../../utils/apiConfig';
+import { API_BASE, COFORGE_API_BASE, MICROSOFT_API_BASE } from '../../utils/apiConfig';
 
-const LivePreviewModal = ({ onClose, showToast }) => {
+const LivePreviewModal = ({ initialCompany = 'All', onClose, showToast }) => {
+  const [companyTab, setCompanyTab] = useState(initialCompany); // 'All' | 'Coforge' | 'Microsoft'
   const [liveJobs, setLiveJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -12,11 +13,23 @@ const LivePreviewModal = ({ onClose, showToast }) => {
     const fetchLiveStream = async () => {
       try {
         setLoading(true);
-        const res = await fetch(API_BASE);
+        setError(null);
+
+        let url = `${API_BASE}/live`;
+        if (companyTab === 'Coforge') {
+          url = `${COFORGE_API_BASE}/live`;
+        } else if (companyTab === 'Microsoft') {
+          url = `${MICROSOFT_API_BASE}/live`;
+        }
+
+        const res = await fetch(url);
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: Failed to fetch live stream`);
+        }
         const data = await res.json();
         if (Array.isArray(data)) {
           setLiveJobs(data);
-          showToast(`Fetched ${data.length} live jobs directly from Coforge API`, 'success');
+          showToast(`Fetched ${data.length} live jobs directly from ${companyTab} API`, 'success');
         } else {
           throw new Error('Invalid format returned');
         }
@@ -29,28 +42,55 @@ const LivePreviewModal = ({ onClose, showToast }) => {
     };
 
     fetchLiveStream();
-  }, []);
+  }, [companyTab]);
 
   return (
     <div className="live-jobs-preview">
       <div className="preview-header">
-        <h3>🌐 Live API Jobs Preview (Raw Coforge Stream)</h3>
+        <div className="preview-title-group">
+          <h3>🌐 Live API Jobs Preview</h3>
+          <div className="modal-company-tabs">
+            <button
+              className={`modal-tab ${companyTab === 'All' ? 'active' : ''}`}
+              onClick={() => setCompanyTab('All')}
+            >
+              All Companies
+            </button>
+            <button
+              className={`modal-tab ${companyTab === 'Coforge' ? 'active' : ''}`}
+              onClick={() => setCompanyTab('Coforge')}
+            >
+              Coforge
+            </button>
+            <button
+              className={`modal-tab ${companyTab === 'Microsoft' ? 'active' : ''}`}
+              onClick={() => setCompanyTab('Microsoft')}
+            >
+              Microsoft
+            </button>
+          </div>
+        </div>
         <button className="btn-close" onClick={onClose}>✕ Close</button>
       </div>
 
       {loading ? (
-        <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-          Loading live jobs directly from Coforge Zwayam Public API...
+        <div style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+          Loading live jobs directly from {companyTab} Public API...
         </div>
       ) : error ? (
-        <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--danger)' }}>
+        <div style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--danger)' }}>
           Error: {error}
+        </div>
+      ) : liveJobs.length === 0 ? (
+        <div style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+          No live jobs found for {companyTab}.
         </div>
       ) : (
         <div className="table-responsive">
           <table className="jobs-table">
             <thead>
               <tr>
+                <th>Source</th>
                 <th>Job ID</th>
                 <th>Title</th>
                 <th>Location</th>
@@ -61,7 +101,12 @@ const LivePreviewModal = ({ onClose, showToast }) => {
             </thead>
             <tbody>
               {liveJobs.map((j) => (
-                <tr key={j.jobId || j.id}>
+                <tr key={`${j.source}-${j.jobId || j.id}`}>
+                  <td>
+                    <span className={`company-tag ${String(j.company || j.source).toLowerCase()}`}>
+                      {j.company || j.source}
+                    </span>
+                  </td>
                   <td><code>{j.jobId || j.id}</code></td>
                   <td><strong>{j.title}</strong></td>
                   <td>{j.location || 'Not specified'}</td>

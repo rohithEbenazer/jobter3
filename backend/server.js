@@ -45,15 +45,19 @@ app.use(async (req, res, next) => {
 
 // 3. Import and Mount Routes
 const cogforceRouter = require('./Route/cogforce.route');
+const microsoftRouter = require('./Route/microsoft.route');
+const jobsRouter = require('./Route/jobs.route');
 
-// Primary route: handles /api/jobs/cogforce requests (live fetch, DB query, DB sync)
+// Dedicated company routes
 app.use('/api/jobs/cogforce', cogforceRouter);
-
-// Alias route: handles /api/jobs/coforge requests for backwards compatibility
 app.use('/api/jobs/coforge', cogforceRouter);
+app.use('/api/jobs/microsoft', microsoftRouter);
+
+// Primary unified jobs route: handles /api/jobs (db, sync, live, :id) with company filtering
+app.use('/api/jobs', jobsRouter);
 
 // Server listen for local standalone running
-if (require.main === module || !process.env.VERCEL) {
+if (require.main === module) {
   const PORT = process.env.PORT || 5000;
   connectDB().then(() => {
     app.listen(PORT, () => {

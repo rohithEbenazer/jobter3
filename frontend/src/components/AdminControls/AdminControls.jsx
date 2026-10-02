@@ -4,6 +4,7 @@ import './AdminControls.css';
 import { API_BASE } from '../../utils/apiConfig';
 
 const AdminControls = ({ onSyncSuccess, onOpenLivePreview, showToast }) => {
+  const [selectedCompany, setSelectedCompany] = useState('All'); // 'All' | 'Coforge' | 'Microsoft'
   const [syncing, setSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState(null); // null | { type: 'loading'|'success'|'error', title: string, desc: string }
   const [stats, setStats] = useState(null);
@@ -13,12 +14,17 @@ const AdminControls = ({ onSyncSuccess, onOpenLivePreview, showToast }) => {
     setSyncStatus({
       type: 'loading',
       title: 'Live Sync In Progress...',
-      desc: 'Connecting to Coforge Zwayam Public API & inserting/updating MongoDB collection...'
+      desc: `Connecting to ${selectedCompany === 'All' ? 'Coforge & Microsoft Careers APIs' : selectedCompany + ' Careers API'} & updating MongoDB collection...`
     });
 
     try {
       const startTime = Date.now();
-      const res = await fetch(`${API_BASE}/sync`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}/sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ company: selectedCompany })
+      });
+
       if (!res.ok) {
         const errText = await res.text();
         throw new Error(errText || `Server returned error status ${res.status}`);
@@ -30,7 +36,7 @@ const AdminControls = ({ onSyncSuccess, onOpenLivePreview, showToast }) => {
         setStats(data.stats);
         setSyncStatus({
           type: 'success',
-          title: '⚡ DB Sync Completed Successfully!',
+          title: `⚡ DB Sync Completed for ${selectedCompany}!`,
           desc: `Synced ${data.stats.totalFetchedRaw} live jobs into MongoDB in ${duration}s. (Inserted: ${data.stats.insertedToDb}, Updated: ${data.stats.updatedOrKeptInDb})`
         });
         showToast(`Live DB Sync completed! DB total: ${data.stats.finalDbCount}`, 'success');
@@ -55,14 +61,52 @@ const AdminControls = ({ onSyncSuccess, onOpenLivePreview, showToast }) => {
       <div className="panel-header">
         <div className="panel-title-group">
           <h2>⚡ Super Admin Live Sync Controls</h2>
-          <p>Extract live postings from Coforge Careers Public API directly into MongoDB database.</p>
+          <p>Extract live postings from Coforge & Microsoft Careers APIs directly into MongoDB database.</p>
         </div>
+
+        {/* Company Selector Checkboxes */}
+        <div className="company-sync-selector">
+          <span className="selector-label">Select Target Company:</span>
+          <div className="company-checkboxes">
+            <label className={`company-chip ${selectedCompany === 'All' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="All"
+                checked={selectedCompany === 'All'}
+                onChange={() => setSelectedCompany('All')}
+              />
+              🏢 All Companies
+            </label>
+            <label className={`company-chip ${selectedCompany === 'Coforge' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="Coforge"
+                checked={selectedCompany === 'Coforge'}
+                onChange={() => setSelectedCompany('Coforge')}
+              />
+              🔶 Coforge
+            </label>
+            <label className={`company-chip ${selectedCompany === 'Microsoft' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="Microsoft"
+                checked={selectedCompany === 'Microsoft'}
+                onChange={() => setSelectedCompany('Microsoft')}
+              />
+              🟦 Microsoft
+            </label>
+          </div>
+        </div>
+
         <div className="admin-actions">
           <button className="btn btn-primary" onClick={handleTriggerSync} disabled={syncing}>
             <span className={syncing ? 'sync-spin' : ''}>🔄</span>
-            <span>{syncing ? 'Syncing Live Jobs...' : 'Trigger Live DB Sync'}</span>
+            <span>{syncing ? `Syncing ${selectedCompany}...` : `Trigger ${selectedCompany} DB Sync`}</span>
           </button>
-          <button className="btn btn-secondary" onClick={onOpenLivePreview}>
+          <button className="btn btn-secondary" onClick={() => onOpenLivePreview(selectedCompany)}>
             <span>🌐</span>
             <span>Fetch Live API Jobs</span>
           </button>

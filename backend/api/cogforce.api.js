@@ -266,9 +266,10 @@ function mapCoforgeJobs(rawItem) {
   const workmode = (item.locationDisplayForManageJobs && String(item.locationDisplayForManageJobs).trim().toLowerCase().includes("work from home"))
     ? "Remote"
     : (item.workmode || item.workMode || item.jobType || item.modeOfWork || null);
-  const role = (Array.isArray(item.jobCollaborationRecord)
+  const roleRaw = (Array.isArray(item.jobCollaborationRecord)
     ? item.jobCollaborationRecord.find(l => String(l.jobId || l.id) === jobId)?.role
     : null) || item.roles || (Array.isArray(item.rolesList) ? item.rolesList[0] : null) || null;
+  const role = Array.isArray(roleRaw) ? roleRaw.filter(Boolean).join(', ') : (roleRaw ? String(roleRaw) : null);
   let mandateSkills = item.skillSet;
 
   return {
@@ -339,6 +340,7 @@ async function fetchAllCoforgeJobs() {
 
         jobIds.add(job.id);
         allJobs.push(job);
+        console.log(`[Coforge Job ID]: ${job.id} | Title: ${job.title}`);
       }
     }
 

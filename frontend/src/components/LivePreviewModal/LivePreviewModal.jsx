@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './LivePreviewModal.css';
 
-import { API_BASE, COFORGE_API_BASE, MICROSOFT_API_BASE, AMAZON_API_BASE } from '../../utils/apiConfig';
+import { API_BASE, COFORGE_API_BASE, MICROSOFT_API_BASE, AMAZON_API_BASE, NETFLIX_API_BASE, SALESFORCE_API_BASE, ZOHO_API_BASE } from '../../utils/apiConfig';
 
 const LivePreviewModal = ({ initialCompany = 'All', onClose, showToast }) => {
-  const [companyTab, setCompanyTab] = useState(initialCompany); // 'All' | 'Coforge' | 'Microsoft' | 'Amazon'
+  const [companyTab, setCompanyTab] = useState(initialCompany); // 'All' | 'Coforge' | 'Microsoft' | 'Amazon' | 'Netflix' | 'Salesforce' | 'Zoho'
   const [liveJobs, setLiveJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -22,6 +22,12 @@ const LivePreviewModal = ({ initialCompany = 'All', onClose, showToast }) => {
           url = `${MICROSOFT_API_BASE}/live`;
         } else if (companyTab === 'Amazon') {
           url = `${AMAZON_API_BASE}/live`;
+        } else if (companyTab === 'Netflix') {
+          url = `${NETFLIX_API_BASE}/live`;
+        } else if (companyTab === 'Salesforce') {
+          url = `${SALESFORCE_API_BASE}/live`;
+        } else if (companyTab === 'Zoho') {
+          url = `${ZOHO_API_BASE}/live`;
         }
 
         const res = await fetch(url);
@@ -75,6 +81,24 @@ const LivePreviewModal = ({ initialCompany = 'All', onClose, showToast }) => {
               onClick={() => setCompanyTab('Amazon')}
             >
               Amazon
+            </button>
+            <button
+              className={`modal-tab ${companyTab === 'Netflix' ? 'active' : ''}`}
+              onClick={() => setCompanyTab('Netflix')}
+            >
+              Netflix
+            </button>
+            <button
+              className={`modal-tab ${companyTab === 'Salesforce' ? 'active' : ''}`}
+              onClick={() => setCompanyTab('Salesforce')}
+            >
+              Salesforce
+            </button>
+            <button
+              className={`modal-tab ${companyTab === 'Zoho' ? 'active' : ''}`}
+              onClick={() => setCompanyTab('Zoho')}
+            >
+              Zoho
             </button>
           </div>
         </div>

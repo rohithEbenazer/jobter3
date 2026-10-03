@@ -47,6 +47,9 @@ app.use(async (req, res, next) => {
 const cogforceRouter = require('./Route/cogforce.route');
 const microsoftRouter = require('./Route/microsoft.route');
 const amazonRouter = require('./Route/amazon.route');
+const netflixRouter = require('./Route/netflix.route');
+const salesforceRouter = require('./Route/salesforce.route');
+const zohoRouter = require('./Route/zoho.route');
 const jobsRouter = require('./Route/jobs.route');
 
 // Dedicated company routes
@@ -54,6 +57,9 @@ app.use('/api/jobs/cogforce', cogforceRouter);
 app.use('/api/jobs/coforge', cogforceRouter);
 app.use('/api/jobs/microsoft', microsoftRouter);
 app.use('/api/jobs/amazon', amazonRouter);
+app.use('/api/jobs/netflix', netflixRouter);
+app.use('/api/jobs/salesforce', salesforceRouter);
+app.use('/api/jobs/zoho', zohoRouter);
 
 // Primary unified jobs route: handles /api/jobs (db, sync, live, :id) with company filtering
 app.use('/api/jobs', jobsRouter);

@@ -259,7 +259,7 @@ const UserPage = ({ onViewDetails, showToast }) => {
         <div className="user-role-badge">
           <span className="badge-dot-green"></span> Candidate Career Portal
         </div>
-        <h1>Explore Verified Openings (Coforge, Microsoft & Amazon)</h1>
+        <h1>Explore Verified Openings (Coforge, Microsoft, Amazon, Netflix, Salesforce & Zoho)</h1>
         <p>Use the combined multi-select filters on the left to filter openings by Company, Location, Date Posted, Salary, Work Mode, Shift, Skills, and Experience.</p>
       </div>
 

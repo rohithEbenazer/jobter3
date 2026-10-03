@@ -17,7 +17,7 @@ const AdminControls = ({ selectedCompany = 'All', onSelectCompany, onSyncSuccess
     setSyncStatus({
       type: 'loading',
       title: 'Live Sync In Progress...',
-      desc: `Connecting to ${selectedCompany === 'All' ? 'Coforge & Microsoft Careers APIs' : selectedCompany + ' Careers API'} & updating MongoDB collection...`
+      desc: `Connecting to ${selectedCompany === 'All' ? 'Coforge, Microsoft, Amazon & Netflix Careers APIs' : selectedCompany + ' Careers API'} & updating MongoDB collection...`
     });
 
     try {
@@ -64,7 +64,7 @@ const AdminControls = ({ selectedCompany = 'All', onSelectCompany, onSyncSuccess
       <div className="panel-header">
         <div className="panel-title-group">
           <h2>⚡ Super Admin Live Sync Controls</h2>
-          <p>Extract live postings from Coforge, Microsoft & Amazon Careers APIs directly into MongoDB database.</p>
+          <p>Extract live postings from Coforge, Microsoft, Amazon, Netflix, Salesforce & Zoho Careers APIs directly into MongoDB database.</p>
         </div>
 
         {/* Company Selector Checkboxes */}
@@ -110,6 +110,36 @@ const AdminControls = ({ selectedCompany = 'All', onSelectCompany, onSyncSuccess
                 onChange={() => handleCompanyChange('Amazon')}
               />
               🟠 Amazon
+            </label>
+            <label className={`company-chip ${selectedCompany === 'Netflix' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="Netflix"
+                checked={selectedCompany === 'Netflix'}
+                onChange={() => handleCompanyChange('Netflix')}
+              />
+              🔴 Netflix
+            </label>
+            <label className={`company-chip ${selectedCompany === 'Salesforce' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="Salesforce"
+                checked={selectedCompany === 'Salesforce'}
+                onChange={() => handleCompanyChange('Salesforce')}
+              />
+              ☁️ Salesforce
+            </label>
+            <label className={`company-chip ${selectedCompany === 'Zoho' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="Zoho"
+                checked={selectedCompany === 'Zoho'}
+                onChange={() => handleCompanyChange('Zoho')}
+              />
+              🟢 Zoho
             </label>
           </div>
         </div>

@@ -1,4 +1,4 @@
-// jobs.route.js - Unified Jobs Router supporting Coforge, Microsoft, or All Companies
+// jobs.route.js - Unified Jobs Router supporting Coforge, Microsoft, Amazon, Netflix, or All Companies
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
@@ -6,9 +6,16 @@ const mongoose = require('mongoose');
 const { fetchAllCoforgeJobs, syncCogforceJobsWithDb } = require('../api/cogforce.api');
 const { fetchAllMicrosoftJobs, syncMicrosoftJobsWithDb } = require('../api/microsoft.api');
 const { fetchAllAmazonJobs, syncAmazonJobsWithDb } = require('../api/amazon.api');
+const { fetchAllNetflixJobs, syncNetflixJobsWithDb } = require('../api/netflix.api');
+const { fetchAllSalesforceJobs, syncSalesforceJobsWithDb } = require('../api/salesforce.api');
+const { fetchAllZohoJobs, syncZohoJobsWithDb } = require('../api/zoho.api');
+
 const { connectDB, CogforceJob } = require('../Db/cogforcedb');
 const { MicrosoftJob } = require('../Db/microsoftdb');
 const { AmazonJob } = require('../Db/amazondb');
+const { NetflixJob } = require('../Db/netflixdb');
+const { SalesforceJob } = require('../Db/salesforcedb');
+const { ZohoJob } = require('../Db/zohodb');
 
 /**
  * Helper to normalize company query param
@@ -27,7 +34,7 @@ function parseCompanyFilter(companyParam) {
 
 /**
  * @route   GET /api/jobs/live
- * @desc    Fetch live jobs from Coforge, Microsoft, or All
+ * @desc    Fetch live jobs from Coforge, Microsoft, Amazon, Netflix, or All
  */
 router.get(['/live', '/'], async (req, res) => {
   try {
@@ -36,14 +43,20 @@ router.get(['/live', '/'], async (req, res) => {
 
     let jobs = [];
 
-    const fetchCoforge = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'coforge');
+    const fetchCoforge = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'coforge' || c.toLowerCase() === 'cogforce');
     const fetchMicrosoft = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'microsoft');
     const fetchAmazon = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'amazon');
+    const fetchNetflix = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'netflix');
+    const fetchSalesforce = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'salesforce' || c.toLowerCase() === 'sf');
+    const fetchZoho = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'zoho');
 
     const tasks = [];
     if (fetchCoforge) tasks.push(fetchAllCoforgeJobs());
     if (fetchMicrosoft) tasks.push(fetchAllMicrosoftJobs({ maxJobs: parseInt(maxJobs, 10) }));
     if (fetchAmazon) tasks.push(fetchAllAmazonJobs({ maxJobs: parseInt(maxJobs, 10) }));
+    if (fetchNetflix) tasks.push(fetchAllNetflixJobs({ maxJobs: parseInt(maxJobs, 10) }));
+    if (fetchSalesforce) tasks.push(fetchAllSalesforceJobs({ maxJobs: parseInt(maxJobs, 10) }));
+    if (fetchZoho) tasks.push(fetchAllZohoJobs({ maxJobs: parseInt(maxJobs, 10) }));
 
     const results = await Promise.all(tasks);
     results.forEach(arr => {
@@ -77,7 +90,7 @@ router.get('/db', async (req, res) => {
     const { company, source, title, location, days, datePosted, limit = 5000, page = 1 } = req.query;
     const filter = {};
 
-    // Company filter (Coforge / Microsoft / All)
+    // Company filter (Coforge / Microsoft / Amazon / Netflix / All)
     const compVal = company || source;
     const selectedCompanies = parseCompanyFilter(compVal);
 
@@ -121,8 +134,11 @@ router.get('/db', async (req, res) => {
 
     let allDbJobs = [];
     const queryMicrosoft = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'microsoft');
-    const queryCoforge = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'coforge');
+    const queryCoforge = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'coforge' || c.toLowerCase() === 'cogforce');
     const queryAmazon = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'amazon');
+    const queryNetflix = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'netflix');
+    const querySalesforce = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'salesforce' || c.toLowerCase() === 'sf');
+    const queryZoho = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'zoho');
 
     const tasks = [];
     if (queryCoforge && CogforceJob) {
@@ -133,6 +149,15 @@ router.get('/db', async (req, res) => {
     }
     if (queryAmazon && AmazonJob) {
       tasks.push(AmazonJob.find(filter).sort({ createdAt: -1 }));
+    }
+    if (queryNetflix && NetflixJob) {
+      tasks.push(NetflixJob.find(filter).sort({ createdAt: -1 }));
+    }
+    if (querySalesforce && SalesforceJob) {
+      tasks.push(SalesforceJob.find(filter).sort({ createdAt: -1 }));
+    }
+    if (queryZoho && ZohoJob) {
+      tasks.push(ZohoJob.find(filter).sort({ createdAt: -1 }));
     }
 
     const results = await Promise.all(tasks);
@@ -176,7 +201,7 @@ router.get('/db', async (req, res) => {
 
 /**
  * @route   POST /api/jobs/sync
- * @desc    Trigger live DB sync for Coforge, Microsoft, or All Companies
+ * @desc    Trigger live DB sync for Coforge, Microsoft, Amazon, Netflix, or All Companies
  */
 router.post(['/sync', '/dbsync'], async (req, res) => {
   try {
@@ -195,13 +220,19 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
     const selectedCompanies = parseCompanyFilter(company);
     const limit = limitParam ? parseInt(limitParam) : null;
 
-    const syncCoforge = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'coforge');
+    const syncCoforge = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'coforge' || c.toLowerCase() === 'cogforce');
     const syncMicrosoft = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'microsoft');
     const syncAmazon = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'amazon');
+    const syncNetflix = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'netflix');
+    const syncSalesforce = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'salesforce' || c.toLowerCase() === 'sf');
+    const syncZoho = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'zoho');
 
     let coforgeStats = null;
     let microsoftStats = null;
     let amazonStats = null;
+    let netflixStats = null;
+    let salesforceStats = null;
+    let zohoStats = null;
 
     if (syncCoforge) {
       coforgeStats = await syncCogforceJobsWithDb(CogforceJob);
@@ -212,11 +243,27 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
     if (syncAmazon) {
       amazonStats = await syncAmazonJobsWithDb(AmazonJob || CogforceJob, limit);
     }
+    if (syncNetflix) {
+      netflixStats = await syncNetflixJobsWithDb(NetflixJob || CogforceJob, limit);
+    }
+    if (syncSalesforce) {
+      salesforceStats = await syncSalesforceJobsWithDb(SalesforceJob || CogforceJob, limit);
+    }
+    if (syncZoho) {
+      zohoStats = await syncZohoJobsWithDb(ZohoJob || CogforceJob, limit);
+    }
 
-    const totalFetchedRaw = (coforgeStats?.stats?.totalFetchedRaw || 0) + (microsoftStats?.stats?.totalFetchedRaw || 0) + (amazonStats?.stats?.totalFetchedRaw || 0);
-    const insertedToDb = (coforgeStats?.stats?.insertedToDb || 0) + (microsoftStats?.stats?.insertedToDb || 0) + (amazonStats?.stats?.insertedToDb || 0);
-    const updatedOrKeptInDb = (coforgeStats?.stats?.updatedOrKeptInDb || 0) + (microsoftStats?.stats?.updatedOrKeptInDb || 0) + (amazonStats?.stats?.updatedOrKeptInDb || 0);
-    const finalDbCount = await CogforceJob.countDocuments();
+    const totalFetchedRaw = (coforgeStats?.stats?.totalFetchedRaw || 0) + (microsoftStats?.stats?.totalFetchedRaw || 0) + (amazonStats?.stats?.totalFetchedRaw || 0) + (netflixStats?.stats?.totalFetchedRaw || 0) + (salesforceStats?.stats?.totalFetchedRaw || 0) + (zohoStats?.stats?.totalFetchedRaw || 0);
+    const insertedToDb = (coforgeStats?.stats?.insertedToDb || 0) + (microsoftStats?.stats?.insertedToDb || 0) + (amazonStats?.stats?.insertedToDb || 0) + (netflixStats?.stats?.insertedToDb || 0) + (salesforceStats?.stats?.insertedToDb || 0) + (zohoStats?.stats?.insertedToDb || 0);
+    const updatedOrKeptInDb = (coforgeStats?.stats?.updatedOrKeptInDb || 0) + (microsoftStats?.stats?.updatedOrKeptInDb || 0) + (amazonStats?.stats?.updatedOrKeptInDb || 0) + (netflixStats?.stats?.updatedOrKeptInDb || 0) + (salesforceStats?.stats?.updatedOrKeptInDb || 0) + (zohoStats?.stats?.updatedOrKeptInDb || 0);
+
+    const countCoforge = CogforceJob ? await CogforceJob.countDocuments() : 0;
+    const countMicrosoft = MicrosoftJob ? await MicrosoftJob.countDocuments() : 0;
+    const countAmazon = AmazonJob ? await AmazonJob.countDocuments() : 0;
+    const countNetflix = NetflixJob ? await NetflixJob.countDocuments() : 0;
+    const countSalesforce = SalesforceJob ? await SalesforceJob.countDocuments() : 0;
+    const countZoho = ZohoJob ? await ZohoJob.countDocuments() : 0;
+    const finalDbCount = countCoforge + countMicrosoft + countAmazon + countNetflix + countSalesforce + countZoho;
 
     res.json({
       success: true,
@@ -228,7 +275,10 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
         finalDbCount,
         coforge: coforgeStats?.stats || null,
         microsoft: microsoftStats?.stats || null,
-        amazon: amazonStats?.stats || null
+        amazon: amazonStats?.stats || null,
+        netflix: netflixStats?.stats || null,
+        salesforce: salesforceStats?.stats || null,
+        zoho: zohoStats?.stats || null
       }
     });
   } catch (err) {
@@ -239,13 +289,28 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
 
 /**
  * @route   GET /api/jobs/:id
- * @desc    Get job details by ID from MongoDB
+ * @desc    Get job details by ID from MongoDB across collections
  */
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
   try {
     if (mongoose.connection.readyState === 1) {
-      const dbJob = await CogforceJob.findOne({ $or: [{ jobId: String(id) }, { id: String(id) }] });
+      let dbJob = await CogforceJob.findOne({ $or: [{ jobId: String(id) }, { id: String(id) }] });
+      if (!dbJob && MicrosoftJob) {
+        dbJob = await MicrosoftJob.findOne({ $or: [{ jobId: String(id) }, { id: String(id) }] });
+      }
+      if (!dbJob && AmazonJob) {
+        dbJob = await AmazonJob.findOne({ $or: [{ jobId: String(id) }, { id: String(id) }] });
+      }
+      if (!dbJob && NetflixJob) {
+        dbJob = await NetflixJob.findOne({ $or: [{ jobId: String(id) }, { id: String(id) }] });
+      }
+      if (!dbJob && SalesforceJob) {
+        dbJob = await SalesforceJob.findOne({ $or: [{ jobId: String(id) }, { id: String(id) }] });
+      }
+      if (!dbJob && ZohoJob) {
+        dbJob = await ZohoJob.findOne({ $or: [{ jobId: String(id) }, { id: String(id) }] });
+      }
       if (dbJob) {
         return res.json({ success: true, job: dbJob });
       }

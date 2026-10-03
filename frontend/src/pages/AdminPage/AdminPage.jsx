@@ -8,7 +8,7 @@ import { API_BASE } from '../../utils/apiConfig';
 
 const AdminPage = ({ onViewDetails, showToast }) => {
   const [targetCompany, setTargetCompany] = useState('All');
-  const [livePreviewCompany, setLivePreviewCompany] = useState(null); // null | 'All' | 'Coforge' | 'Microsoft' | 'Amazon'
+  const [livePreviewCompany, setLivePreviewCompany] = useState(null); // null | 'All' | 'Coforge' | 'Microsoft' | 'Amazon' | 'Netflix'
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalJobs, setTotalJobs] = useState(0);
@@ -73,7 +73,7 @@ const AdminPage = ({ onViewDetails, showToast }) => {
         <div className="role-badge-pill">
           <span className="badge-dot"></span> Super Admin Portal
         </div>
-        <h1>Coforge, Microsoft & Amazon Live Sync & Command Center</h1>
+        <h1>Coforge, Microsoft, Amazon, Netflix, Salesforce & Zoho Live Sync & Command Center</h1>
         <p>Trigger live API extractions, execute MongoDB sync operations per company, and manage stored job listings.</p>
       </div>
 

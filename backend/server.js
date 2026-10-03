@@ -50,6 +50,8 @@ const amazonRouter = require('./Route/amazon.route');
 const netflixRouter = require('./Route/netflix.route');
 const salesforceRouter = require('./Route/salesforce.route');
 const zohoRouter = require('./Route/zoho.route');
+const intelRouter = require('./Route/intel.route');
+const nvidiaRouter = require('./Route/nvidia.route');
 const jobsRouter = require('./Route/jobs.route');
 
 // Dedicated company routes
@@ -60,6 +62,8 @@ app.use('/api/jobs/amazon', amazonRouter);
 app.use('/api/jobs/netflix', netflixRouter);
 app.use('/api/jobs/salesforce', salesforceRouter);
 app.use('/api/jobs/zoho', zohoRouter);
+app.use('/api/jobs/intel', intelRouter);
+app.use('/api/jobs/nvidia', nvidiaRouter);
 
 // Primary unified jobs route: handles /api/jobs (db, sync, live, :id) with company filtering
 app.use('/api/jobs', jobsRouter);

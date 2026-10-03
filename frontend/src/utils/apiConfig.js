@@ -14,3 +14,5 @@ export const AMAZON_API_BASE = `${API_HOST}/api/jobs/amazon`;
 export const NETFLIX_API_BASE = `${API_HOST}/api/jobs/netflix`;
 export const SALESFORCE_API_BASE = `${API_HOST}/api/jobs/salesforce`;
 export const ZOHO_API_BASE = `${API_HOST}/api/jobs/zoho`;
+export const INTEL_API_BASE = `${API_HOST}/api/jobs/intel`;
+export const NVIDIA_API_BASE = `${API_HOST}/api/jobs/nvidia`;

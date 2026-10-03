@@ -64,7 +64,7 @@ const AdminControls = ({ selectedCompany = 'All', onSelectCompany, onSyncSuccess
       <div className="panel-header">
         <div className="panel-title-group">
           <h2>⚡ Super Admin Live Sync Controls</h2>
-          <p>Extract live postings from Coforge, Microsoft, Amazon, Netflix, Salesforce & Zoho Careers APIs directly into MongoDB database.</p>
+          <p>Extract live postings from Coforge, Microsoft, Amazon, Netflix, Salesforce, Zoho, Intel & NVIDIA Careers APIs directly into MongoDB database.</p>
         </div>
 
         {/* Company Selector Checkboxes */}
@@ -140,6 +140,26 @@ const AdminControls = ({ selectedCompany = 'All', onSelectCompany, onSyncSuccess
                 onChange={() => handleCompanyChange('Zoho')}
               />
               🟢 Zoho
+            </label>
+            <label className={`company-chip ${selectedCompany === 'Intel' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="Intel"
+                checked={selectedCompany === 'Intel'}
+                onChange={() => handleCompanyChange('Intel')}
+              />
+              🔷 Intel
+            </label>
+            <label className={`company-chip ${selectedCompany === 'NVIDIA' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="NVIDIA"
+                checked={selectedCompany === 'NVIDIA'}
+                onChange={() => handleCompanyChange('NVIDIA')}
+              />
+              💚 NVIDIA
             </label>
           </div>
         </div>

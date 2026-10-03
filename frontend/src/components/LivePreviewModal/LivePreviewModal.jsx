@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './LivePreviewModal.css';
-
-import { API_BASE, COFORGE_API_BASE, MICROSOFT_API_BASE, AMAZON_API_BASE, NETFLIX_API_BASE, SALESFORCE_API_BASE, ZOHO_API_BASE } from '../../utils/apiConfig';
+import { API_BASE, COFORGE_API_BASE, MICROSOFT_API_BASE, AMAZON_API_BASE, NETFLIX_API_BASE, SALESFORCE_API_BASE, ZOHO_API_BASE, INTEL_API_BASE, NVIDIA_API_BASE } from '../../utils/apiConfig';
 
 const LivePreviewModal = ({ initialCompany = 'All', onClose, showToast }) => {
-  const [companyTab, setCompanyTab] = useState(initialCompany); // 'All' | 'Coforge' | 'Microsoft' | 'Amazon' | 'Netflix' | 'Salesforce' | 'Zoho'
+  const [companyTab, setCompanyTab] = useState(initialCompany); // 'All' | 'Coforge' | 'Microsoft' | 'Amazon' | 'Netflix' | 'Salesforce' | 'Zoho' | 'Intel' | 'NVIDIA'
   const [liveJobs, setLiveJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -28,6 +27,10 @@ const LivePreviewModal = ({ initialCompany = 'All', onClose, showToast }) => {
           url = `${SALESFORCE_API_BASE}/live`;
         } else if (companyTab === 'Zoho') {
           url = `${ZOHO_API_BASE}/live`;
+        } else if (companyTab === 'Intel') {
+          url = `${INTEL_API_BASE}/live`;
+        } else if (companyTab === 'NVIDIA') {
+          url = `${NVIDIA_API_BASE}/live`;
         }
 
         const res = await fetch(url);
@@ -99,6 +102,18 @@ const LivePreviewModal = ({ initialCompany = 'All', onClose, showToast }) => {
               onClick={() => setCompanyTab('Zoho')}
             >
               Zoho
+            </button>
+            <button
+              className={`modal-tab ${companyTab === 'Intel' ? 'active' : ''}`}
+              onClick={() => setCompanyTab('Intel')}
+            >
+              Intel
+            </button>
+            <button
+              className={`modal-tab ${companyTab === 'NVIDIA' ? 'active' : ''}`}
+              onClick={() => setCompanyTab('NVIDIA')}
+            >
+              NVIDIA
             </button>
           </div>
         </div>

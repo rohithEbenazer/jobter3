@@ -19,3 +19,4 @@ export const NVIDIA_API_BASE = `${API_HOST}/api/jobs/nvidia`;
 export const ORACLE_API_BASE = `${API_HOST}/api/jobs/oracle`;
 export const AMD_API_BASE = `${API_HOST}/api/jobs/amd`;
 export const WIPRO_API_BASE = `${API_HOST}/api/jobs/wipro`;
+export const MEESHO_API_BASE = `${API_HOST}/api/jobs/meesho`;

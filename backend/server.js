@@ -7,10 +7,10 @@ const mongoose = require('mongoose');
 const path = require('path');
 
 // 1. Import API handler functions from cogforce.api.js
-const { 
-  fetchAllCoforgeJobs, 
-  fetchCoforgeJobDetailsUrl, 
-  syncCogforceJobsWithDb 
+const {
+  fetchAllCoforgeJobs,
+  fetchCoforgeJobDetailsUrl,
+  syncCogforceJobsWithDb
 } = require('./api/cogforce.api');
 
 const app = express();
@@ -55,6 +55,7 @@ const nvidiaRouter = require('./Route/nvidia.route');
 const oracleRouter = require('./Route/oracle.route');
 const amdRouter = require('./Route/amd.route');
 const wiproRouter = require('./Route/wipro.route');
+const meeshoRouter = require('./Route/meesho.route');
 const jobsRouter = require('./Route/jobs.route');
 
 // Dedicated company routes
@@ -70,6 +71,7 @@ app.use('/api/jobs/nvidia', nvidiaRouter);
 app.use('/api/jobs/oracle', oracleRouter);
 app.use('/api/jobs/amd', amdRouter);
 app.use('/api/jobs/wipro', wiproRouter);
+app.use('/api/jobs/meesho', meeshoRouter);
 
 // Primary unified jobs route: handles /api/jobs (db, sync, live, :id) with company filtering
 app.use('/api/jobs', jobsRouter);

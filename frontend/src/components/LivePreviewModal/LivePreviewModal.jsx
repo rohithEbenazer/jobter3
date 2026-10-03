@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './LivePreviewModal.css';
-import { API_BASE, COFORGE_API_BASE, MICROSOFT_API_BASE, AMAZON_API_BASE, NETFLIX_API_BASE, SALESFORCE_API_BASE, ZOHO_API_BASE, INTEL_API_BASE, NVIDIA_API_BASE, ORACLE_API_BASE, AMD_API_BASE, WIPRO_API_BASE } from '../../utils/apiConfig';
+import { API_BASE, COFORGE_API_BASE, MICROSOFT_API_BASE, AMAZON_API_BASE, NETFLIX_API_BASE, SALESFORCE_API_BASE, ZOHO_API_BASE, INTEL_API_BASE, NVIDIA_API_BASE, ORACLE_API_BASE, AMD_API_BASE, WIPRO_API_BASE, MEESHO_API_BASE } from '../../utils/apiConfig';
 
 const LivePreviewModal = ({ initialCompany = 'All', onClose, showToast }) => {
-  const [companyTab, setCompanyTab] = useState(initialCompany); // 'All' | 'Coforge' | 'Microsoft' | 'Amazon' | 'Netflix' | 'Salesforce' | 'Zoho' | 'Intel' | 'NVIDIA' | 'Oracle' | 'AMD' | 'Wipro'
+  const [companyTab, setCompanyTab] = useState(initialCompany); // 'All' | 'Coforge' | 'Microsoft' | 'Amazon' | 'Netflix' | 'Salesforce' | 'Zoho' | 'Intel' | 'NVIDIA' | 'Oracle' | 'AMD' | 'Wipro' | 'Meesho'
   const [liveJobs, setLiveJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -37,6 +37,8 @@ const LivePreviewModal = ({ initialCompany = 'All', onClose, showToast }) => {
           url = `${AMD_API_BASE}/live`;
         } else if (companyTab === 'Wipro') {
           url = `${WIPRO_API_BASE}/live`;
+        } else if (companyTab === 'Meesho') {
+          url = `${MEESHO_API_BASE}/live`;
         }
 
         const res = await fetch(url);
@@ -138,6 +140,12 @@ const LivePreviewModal = ({ initialCompany = 'All', onClose, showToast }) => {
               onClick={() => setCompanyTab('Wipro')}
             >
               Wipro
+            </button>
+            <button
+              className={`modal-tab ${companyTab === 'Meesho' ? 'active' : ''}`}
+              onClick={() => setCompanyTab('Meesho')}
+            >
+              Meesho
             </button>
           </div>
         </div>

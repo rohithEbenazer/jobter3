@@ -191,6 +191,16 @@ const AdminControls = ({ selectedCompany = 'All', onSelectCompany, onSyncSuccess
               />
               🟣 Wipro
             </label>
+            <label className={`company-chip ${selectedCompany === 'Meesho' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="Meesho"
+                checked={selectedCompany === 'Meesho'}
+                onChange={() => handleCompanyChange('Meesho')}
+              />
+              🛍️ Meesho
+            </label>
           </div>
         </div>
 

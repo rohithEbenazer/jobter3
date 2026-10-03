@@ -162,6 +162,7 @@ const FilterSidebar = ({
     else if (/oracle/i.test(comp)) comp = 'Oracle';
     else if (/amd/i.test(comp)) comp = 'AMD';
     else if (/wipro/i.test(comp)) comp = 'Wipro';
+    else if (/meesho/i.test(comp)) comp = 'Meesho';
     companyCounts[comp] = (companyCounts[comp] || 0) + 1;
 
     // Workmode
@@ -217,7 +218,7 @@ const FilterSidebar = ({
   });
 
   const datesList = ['Last 24 Hours', 'Last 7 Days', 'Last 14 Days', 'Last 30 Days', 'More than 30 Days'];
-  const defaultCompanies = ['Coforge', 'Microsoft', 'Amazon', 'Netflix', 'Salesforce', 'Zoho', 'Intel', 'NVIDIA', 'Oracle', 'AMD', 'Wipro'];
+  const defaultCompanies = ['Coforge', 'Microsoft', 'Amazon', 'Netflix', 'Salesforce', 'Zoho', 'Intel', 'NVIDIA', 'Oracle', 'AMD', 'Wipro', 'Meesho'];
   const companiesList = Array.from(new Set([...defaultCompanies, ...Object.keys(companyCounts)]));
   const skillsList = Object.keys(skillCounts).sort((a, b) => skillCounts[b] - skillCounts[a]).slice(0, 12);
   const experiencesList = ['0 Years', '1 Year', '2 Years', '3 Years', '4 Years', '5+ Years'];
@@ -265,381 +266,381 @@ const FilterSidebar = ({
       <div className={`filter-body-content ${mobileExpanded ? 'is-open' : ''}`}>
         {/* 1. HIERARCHICAL LOCATION FILTER */}
         <div className="filter-group location-filter-group">
-        <div className="filter-group-title">
-          <span>📍</span> Location
-        </div>
-
-        {/* Search input at top of Location */}
-        <div className="location-search-box">
-          <span className="location-search-icon">🔍</span>
-          <input
-            type="text"
-            placeholder={
-              selectedCountry && selectedState
-                ? "Search city..."
-                : selectedCountry
-                ? "Search state..."
-                : "Search location..."
-            }
-            value={searchLocation}
-            onChange={(e) => setSearchLocation(e.target.value)}
-            className="location-search-input"
-          />
-          {searchLocation && (
-            <button className="clear-search-btn" onClick={() => setSearchLocation('')}>
-              ×
-            </button>
-          )}
-        </div>
-
-        {/* Country -> State -> City Dropdowns */}
-        <div className="location-dropdowns-wrapper">
-          {/* Country Dropdown */}
-          <div className="location-dropdown-field">
-            <label className="dropdown-label">Country</label>
-            <div className="select-wrapper">
-              <select
-                value={selectedCountry || ''}
-                onChange={(e) => {
-                  const val = e.target.value || null;
-                  setSelectedCountry(val);
-                  setSelectedState(null);
-                  setSelectedCity('');
-                  setSearchLocation('');
-                }}
-                className="location-select"
-              >
-                <option value="">Select Country</option>
-                {countriesList.map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-              <span className="dropdown-arrow">▼</span>
-            </div>
+          <div className="filter-group-title">
+            <span>📍</span> Location
           </div>
 
-          {/* State Dropdown */}
-          <div className="location-dropdown-field">
-            <label className="dropdown-label">State</label>
-            <div className="select-wrapper">
-              <select
-                value={selectedState || ''}
-                onChange={(e) => {
-                  const val = e.target.value || null;
-                  setSelectedState(val);
-                  setSelectedCity('');
-                  setSearchLocation('');
-                }}
-                disabled={!selectedCountry}
-                className={`location-select ${!selectedCountry ? 'disabled' : ''}`}
-              >
-                <option value="">Select State</option>
-                {statesList.map(s => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-              <span className="dropdown-arrow">▼</span>
-            </div>
-          </div>
-
-          {/* City Dropdown */}
-          <div className="location-dropdown-field">
-            <label className="dropdown-label">City</label>
-            <div className="select-wrapper">
-              <select
-                value={selectedCity}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setSelectedCity(val);
-                  if (val) {
-                    if (!selectedLocations.includes(val)) {
-                      onToggleLocation(val);
-                    }
-                  }
-                }}
-                disabled={!selectedCountry || !selectedState}
-                className={`location-select ${(!selectedCountry || !selectedState) ? 'disabled' : ''}`}
-              >
-                <option value="">Select City</option>
-                {citiesList.map(ci => (
-                  <option key={ci} value={ci}>{ci}</option>
-                ))}
-              </select>
-              <span className="dropdown-arrow">▼</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Location Navigation Breadcrumbs / Level Header */}
-        <div className="location-level-nav">
-          {selectedCountry ? (
-            <div className="location-breadcrumbs">
-              <button
-                type="button"
-                className="btn-back-location"
-                onClick={() => {
-                  if (selectedState) {
-                    setSelectedState(null);
-                  } else {
-                    setSelectedCountry(null);
-                  }
-                }}
-              >
-                ← Back
+          {/* Search input at top of Location */}
+          <div className="location-search-box">
+            <span className="location-search-icon">🔍</span>
+            <input
+              type="text"
+              placeholder={
+                selectedCountry && selectedState
+                  ? "Search city..."
+                  : selectedCountry
+                    ? "Search state..."
+                    : "Search location..."
+              }
+              value={searchLocation}
+              onChange={(e) => setSearchLocation(e.target.value)}
+              className="location-search-input"
+            />
+            {searchLocation && (
+              <button className="clear-search-btn" onClick={() => setSearchLocation('')}>
+                ×
               </button>
-              <span className="breadcrumb-path">
-                {selectedCountry}{selectedState ? ` / ${selectedState}` : ''}
-              </span>
-            </div>
-          ) : (
-            <div className="location-level-title">Select Country to view States</div>
-          )}
-        </div>
+            )}
+          </div>
 
-        {/* Active Level Checkboxes List with Counts */}
-        <div className="filter-options-list location-options-list">
-          {displayItems.length === 0 ? (
-            <div className="empty-location-msg">No matching locations found</div>
-          ) : (
-            displayItems.map((item) => {
-              const isChecked = selectedLocations.includes(item.name);
-              return (
-                <div
-                  key={item.name}
-                  className={`checkbox-label ${isChecked ? 'checked' : ''}`}
+          {/* Country -> State -> City Dropdowns */}
+          <div className="location-dropdowns-wrapper">
+            {/* Country Dropdown */}
+            <div className="location-dropdown-field">
+              <label className="dropdown-label">Country</label>
+              <div className="select-wrapper">
+                <select
+                  value={selectedCountry || ''}
+                  onChange={(e) => {
+                    const val = e.target.value || null;
+                    setSelectedCountry(val);
+                    setSelectedState(null);
+                    setSelectedCity('');
+                    setSearchLocation('');
+                  }}
+                  className="location-select"
                 >
-                  <div className="checkbox-left">
-                    <input
-                      type="checkbox"
-                      className="checkbox-input"
-                      checked={isChecked}
-                      onChange={() => onToggleLocation(item.name)}
-                    />
-                    <span
-                      className="location-item-name"
-                      onClick={() => {
-                        if (item.canDrill) {
-                          if (item.level === 'country') {
-                            setSelectedCountry(item.name);
-                          } else if (item.level === 'state') {
-                            setSelectedState(item.name);
-                          }
-                        }
-                      }}
-                    >
-                      {item.name}
-                    </span>
-                  </div>
-                  <div className="checkbox-right">
-                    <span className="filter-count">{item.count}</span>
-                    {item.canDrill && (
-                      <button
-                        type="button"
-                        className="drill-arrow-btn"
-                        title={`View ${item.level === 'country' ? 'states' : 'cities'}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (item.level === 'country') {
-                            setSelectedCountry(item.name);
-                          } else if (item.level === 'state') {
-                            setSelectedState(item.name);
+                  <option value="">Select Country</option>
+                  {countriesList.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+                <span className="dropdown-arrow">▼</span>
+              </div>
+            </div>
+
+            {/* State Dropdown */}
+            <div className="location-dropdown-field">
+              <label className="dropdown-label">State</label>
+              <div className="select-wrapper">
+                <select
+                  value={selectedState || ''}
+                  onChange={(e) => {
+                    const val = e.target.value || null;
+                    setSelectedState(val);
+                    setSelectedCity('');
+                    setSearchLocation('');
+                  }}
+                  disabled={!selectedCountry}
+                  className={`location-select ${!selectedCountry ? 'disabled' : ''}`}
+                >
+                  <option value="">Select State</option>
+                  {statesList.map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+                <span className="dropdown-arrow">▼</span>
+              </div>
+            </div>
+
+            {/* City Dropdown */}
+            <div className="location-dropdown-field">
+              <label className="dropdown-label">City</label>
+              <div className="select-wrapper">
+                <select
+                  value={selectedCity}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSelectedCity(val);
+                    if (val) {
+                      if (!selectedLocations.includes(val)) {
+                        onToggleLocation(val);
+                      }
+                    }
+                  }}
+                  disabled={!selectedCountry || !selectedState}
+                  className={`location-select ${(!selectedCountry || !selectedState) ? 'disabled' : ''}`}
+                >
+                  <option value="">Select City</option>
+                  {citiesList.map(ci => (
+                    <option key={ci} value={ci}>{ci}</option>
+                  ))}
+                </select>
+                <span className="dropdown-arrow">▼</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Location Navigation Breadcrumbs / Level Header */}
+          <div className="location-level-nav">
+            {selectedCountry ? (
+              <div className="location-breadcrumbs">
+                <button
+                  type="button"
+                  className="btn-back-location"
+                  onClick={() => {
+                    if (selectedState) {
+                      setSelectedState(null);
+                    } else {
+                      setSelectedCountry(null);
+                    }
+                  }}
+                >
+                  ← Back
+                </button>
+                <span className="breadcrumb-path">
+                  {selectedCountry}{selectedState ? ` / ${selectedState}` : ''}
+                </span>
+              </div>
+            ) : (
+              <div className="location-level-title">Select Country to view States</div>
+            )}
+          </div>
+
+          {/* Active Level Checkboxes List with Counts */}
+          <div className="filter-options-list location-options-list">
+            {displayItems.length === 0 ? (
+              <div className="empty-location-msg">No matching locations found</div>
+            ) : (
+              displayItems.map((item) => {
+                const isChecked = selectedLocations.includes(item.name);
+                return (
+                  <div
+                    key={item.name}
+                    className={`checkbox-label ${isChecked ? 'checked' : ''}`}
+                  >
+                    <div className="checkbox-left">
+                      <input
+                        type="checkbox"
+                        className="checkbox-input"
+                        checked={isChecked}
+                        onChange={() => onToggleLocation(item.name)}
+                      />
+                      <span
+                        className="location-item-name"
+                        onClick={() => {
+                          if (item.canDrill) {
+                            if (item.level === 'country') {
+                              setSelectedCountry(item.name);
+                            } else if (item.level === 'state') {
+                              setSelectedState(item.name);
+                            }
                           }
                         }}
                       >
-                        ›
-                      </button>
-                    )}
+                        {item.name}
+                      </span>
+                    </div>
+                    <div className="checkbox-right">
+                      <span className="filter-count">{item.count}</span>
+                      {item.canDrill && (
+                        <button
+                          type="button"
+                          className="drill-arrow-btn"
+                          title={`View ${item.level === 'country' ? 'states' : 'cities'}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (item.level === 'country') {
+                              setSelectedCountry(item.name);
+                            } else if (item.level === 'state') {
+                              setSelectedState(item.name);
+                            }
+                          }}
+                        >
+                          ›
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })
-          )}
+                );
+              })
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* 2. DATE POSTED CHECKBOXES */}
-      <div className="filter-group">
-        <div className="filter-group-title">
-          <span>🗓️</span> Date Posted
-        </div>
-        <div className="filter-options-list">
-          {datesList.map((dt) => {
-            const isChecked = selectedDates.includes(dt);
-            return (
-              <label key={dt} className={`checkbox-label ${isChecked ? 'checked' : ''}`}>
-                <div className="checkbox-left">
-                  <input
-                    type="checkbox"
-                    className="checkbox-input"
-                    checked={isChecked}
-                    onChange={() => onToggleDate && onToggleDate(dt)}
-                  />
-                  <span>{dt}</span>
-                </div>
-                <span className="filter-count">{dateCounts[dt] || 0}</span>
-              </label>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 3. SALARY CHECKBOXES */}
-      <div className="filter-group">
-        <div className="filter-group-title">
-          <span>💵</span> Salary Info
-        </div>
-        <div className="filter-options-list">
-          {salariesList.map((sal) => {
-            const isChecked = selectedSalaries.includes(sal);
-            return (
-              <label key={sal} className={`checkbox-label ${isChecked ? 'checked' : ''}`}>
-                <div className="checkbox-left">
-                  <input
-                    type="checkbox"
-                    className="checkbox-input"
-                    checked={isChecked}
-                    onChange={() => onToggleSalary(sal)}
-                  />
-                  <span>{sal}</span>
-                </div>
-                <span className="filter-count">{salaryCounts[sal] || 0}</span>
-              </label>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 3. WORK MODE CHECKBOXES */}
-      <div className="filter-group">
-        <div className="filter-group-title">
-          <span>🏠</span> Work Mode
-        </div>
-        <div className="filter-options-list">
-          {workmodesList.map((mode) => {
-            const isChecked = selectedWorkmodes.includes(mode);
-            return (
-              <label key={mode} className={`checkbox-label ${isChecked ? 'checked' : ''}`}>
-                <div className="checkbox-left">
-                  <input
-                    type="checkbox"
-                    className="checkbox-input"
-                    checked={isChecked}
-                    onChange={() => onToggleWorkmode(mode)}
-                  />
-                  <span>{mode}</span>
-                </div>
-                <span className="filter-count">{workmodeCounts[mode]}</span>
-              </label>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 4. SHIFT CHECKBOXES */}
-      <div className="filter-group">
-        <div className="filter-group-title">
-          <span>☀️</span> Shift Type
-        </div>
-        <div className="filter-options-list">
-          {shiftsList.map((shift) => {
-            const isChecked = selectedShifts.includes(shift);
-            return (
-              <label key={shift} className={`checkbox-label ${isChecked ? 'checked' : ''}`}>
-                <div className="checkbox-left">
-                  <input
-                    type="checkbox"
-                    className="checkbox-input"
-                    checked={isChecked}
-                    onChange={() => onToggleShift(shift)}
-                  />
-                  <span>{shift}</span>
-                </div>
-                <span className="filter-count">{shiftCounts[shift] || 0}</span>
-              </label>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 5. COMPANY CHECKBOXES */}
-      <div className="filter-group">
-        <div className="filter-group-title">
-          <span>🏢</span> Company
-        </div>
-        <div className="filter-options-list">
-          {companiesList.map((comp) => {
-            const isChecked = selectedCompanies.includes(comp);
-            return (
-              <label key={comp} className={`checkbox-label ${isChecked ? 'checked' : ''}`}>
-                <div className="checkbox-left">
-                  <input
-                    type="checkbox"
-                    className="checkbox-input"
-                    checked={isChecked}
-                    onChange={() => onToggleCompany(comp)}
-                  />
-                  <span>{comp}</span>
-                </div>
-                <span className="filter-count">{companyCounts[comp] || 0}</span>
-              </label>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 6. EXPERIENCE CHECKBOXES */}
-      <div className="filter-group">
-        <div className="filter-group-title">
-          <span>💼</span> Experience (Single Year)
-        </div>
-        <div className="filter-options-list">
-          {experiencesList.map((exp) => {
-            const isChecked = selectedExperiences.includes(exp);
-            return (
-              <label key={exp} className={`checkbox-label ${isChecked ? 'checked' : ''}`}>
-                <div className="checkbox-left">
-                  <input
-                    type="checkbox"
-                    className="checkbox-input"
-                    checked={isChecked}
-                    onChange={() => onToggleExperience(exp)}
-                  />
-                  <span>{exp}</span>
-                </div>
-                <span className="filter-count">{expCounts[exp] || 0}</span>
-              </label>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 7. SKILLS CHECKBOXES */}
-      {skillsList.length > 0 && (
+        {/* 2. DATE POSTED CHECKBOXES */}
         <div className="filter-group">
           <div className="filter-group-title">
-            <span>🛠️</span> Skills
+            <span>🗓️</span> Date Posted
           </div>
           <div className="filter-options-list">
-            {skillsList.map((skill) => {
-              const isChecked = selectedSkills.includes(skill);
+            {datesList.map((dt) => {
+              const isChecked = selectedDates.includes(dt);
               return (
-                <label key={skill} className={`checkbox-label ${isChecked ? 'checked' : ''}`}>
+                <label key={dt} className={`checkbox-label ${isChecked ? 'checked' : ''}`}>
                   <div className="checkbox-left">
                     <input
                       type="checkbox"
                       className="checkbox-input"
                       checked={isChecked}
-                      onChange={() => onToggleSkill(skill)}
+                      onChange={() => onToggleDate && onToggleDate(dt)}
                     />
-                    <span>{skill}</span>
+                    <span>{dt}</span>
                   </div>
-                  <span className="filter-count">{skillCounts[skill]}</span>
+                  <span className="filter-count">{dateCounts[dt] || 0}</span>
                 </label>
               );
             })}
           </div>
         </div>
-      )}
+
+        {/* 3. SALARY CHECKBOXES */}
+        <div className="filter-group">
+          <div className="filter-group-title">
+            <span>💵</span> Salary Info
+          </div>
+          <div className="filter-options-list">
+            {salariesList.map((sal) => {
+              const isChecked = selectedSalaries.includes(sal);
+              return (
+                <label key={sal} className={`checkbox-label ${isChecked ? 'checked' : ''}`}>
+                  <div className="checkbox-left">
+                    <input
+                      type="checkbox"
+                      className="checkbox-input"
+                      checked={isChecked}
+                      onChange={() => onToggleSalary(sal)}
+                    />
+                    <span>{sal}</span>
+                  </div>
+                  <span className="filter-count">{salaryCounts[sal] || 0}</span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 3. WORK MODE CHECKBOXES */}
+        <div className="filter-group">
+          <div className="filter-group-title">
+            <span>🏠</span> Work Mode
+          </div>
+          <div className="filter-options-list">
+            {workmodesList.map((mode) => {
+              const isChecked = selectedWorkmodes.includes(mode);
+              return (
+                <label key={mode} className={`checkbox-label ${isChecked ? 'checked' : ''}`}>
+                  <div className="checkbox-left">
+                    <input
+                      type="checkbox"
+                      className="checkbox-input"
+                      checked={isChecked}
+                      onChange={() => onToggleWorkmode(mode)}
+                    />
+                    <span>{mode}</span>
+                  </div>
+                  <span className="filter-count">{workmodeCounts[mode]}</span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 4. SHIFT CHECKBOXES */}
+        <div className="filter-group">
+          <div className="filter-group-title">
+            <span>☀️</span> Shift Type
+          </div>
+          <div className="filter-options-list">
+            {shiftsList.map((shift) => {
+              const isChecked = selectedShifts.includes(shift);
+              return (
+                <label key={shift} className={`checkbox-label ${isChecked ? 'checked' : ''}`}>
+                  <div className="checkbox-left">
+                    <input
+                      type="checkbox"
+                      className="checkbox-input"
+                      checked={isChecked}
+                      onChange={() => onToggleShift(shift)}
+                    />
+                    <span>{shift}</span>
+                  </div>
+                  <span className="filter-count">{shiftCounts[shift] || 0}</span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 5. COMPANY CHECKBOXES */}
+        <div className="filter-group">
+          <div className="filter-group-title">
+            <span>🏢</span> Company
+          </div>
+          <div className="filter-options-list">
+            {companiesList.map((comp) => {
+              const isChecked = selectedCompanies.includes(comp);
+              return (
+                <label key={comp} className={`checkbox-label ${isChecked ? 'checked' : ''}`}>
+                  <div className="checkbox-left">
+                    <input
+                      type="checkbox"
+                      className="checkbox-input"
+                      checked={isChecked}
+                      onChange={() => onToggleCompany(comp)}
+                    />
+                    <span>{comp}</span>
+                  </div>
+                  <span className="filter-count">{companyCounts[comp] || 0}</span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 6. EXPERIENCE CHECKBOXES */}
+        <div className="filter-group">
+          <div className="filter-group-title">
+            <span>💼</span> Experience (Single Year)
+          </div>
+          <div className="filter-options-list">
+            {experiencesList.map((exp) => {
+              const isChecked = selectedExperiences.includes(exp);
+              return (
+                <label key={exp} className={`checkbox-label ${isChecked ? 'checked' : ''}`}>
+                  <div className="checkbox-left">
+                    <input
+                      type="checkbox"
+                      className="checkbox-input"
+                      checked={isChecked}
+                      onChange={() => onToggleExperience(exp)}
+                    />
+                    <span>{exp}</span>
+                  </div>
+                  <span className="filter-count">{expCounts[exp] || 0}</span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 7. SKILLS CHECKBOXES */}
+        {skillsList.length > 0 && (
+          <div className="filter-group">
+            <div className="filter-group-title">
+              <span>🛠️</span> Skills
+            </div>
+            <div className="filter-options-list">
+              {skillsList.map((skill) => {
+                const isChecked = selectedSkills.includes(skill);
+                return (
+                  <label key={skill} className={`checkbox-label ${isChecked ? 'checked' : ''}`}>
+                    <div className="checkbox-left">
+                      <input
+                        type="checkbox"
+                        className="checkbox-input"
+                        checked={isChecked}
+                        onChange={() => onToggleSkill(skill)}
+                      />
+                      <span>{skill}</span>
+                    </div>
+                    <span className="filter-count">{skillCounts[skill]}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Mobile Apply & Hide Filter Button */}
         <div className="mobile-apply-bar">

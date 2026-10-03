@@ -159,6 +159,9 @@ const FilterSidebar = ({
     else if (/zoho/i.test(comp)) comp = 'Zoho';
     else if (/intel/i.test(comp)) comp = 'Intel';
     else if (/nvidia/i.test(comp)) comp = 'NVIDIA';
+    else if (/oracle/i.test(comp)) comp = 'Oracle';
+    else if (/amd/i.test(comp)) comp = 'AMD';
+    else if (/wipro/i.test(comp)) comp = 'Wipro';
     companyCounts[comp] = (companyCounts[comp] || 0) + 1;
 
     // Workmode
@@ -214,7 +217,7 @@ const FilterSidebar = ({
   });
 
   const datesList = ['Last 24 Hours', 'Last 7 Days', 'Last 14 Days', 'Last 30 Days', 'More than 30 Days'];
-  const defaultCompanies = ['Coforge', 'Microsoft', 'Amazon', 'Netflix', 'Salesforce', 'Zoho', 'Intel', 'NVIDIA'];
+  const defaultCompanies = ['Coforge', 'Microsoft', 'Amazon', 'Netflix', 'Salesforce', 'Zoho', 'Intel', 'NVIDIA', 'Oracle', 'AMD', 'Wipro'];
   const companiesList = Array.from(new Set([...defaultCompanies, ...Object.keys(companyCounts)]));
   const skillsList = Object.keys(skillCounts).sort((a, b) => skillCounts[b] - skillCounts[a]).slice(0, 12);
   const experiencesList = ['0 Years', '1 Year', '2 Years', '3 Years', '4 Years', '5+ Years'];

@@ -82,6 +82,9 @@ const intelJobSchema = new mongoose.Schema(
 
 // Compound index for unique Intel job IDs
 intelJobSchema.index({ source: 1, jobId: 1 }, { unique: true });
+intelJobSchema.index({ createdAt: -1 });
+intelJobSchema.index({ postedDate: -1 });
+intelJobSchema.index({ source: 1, createdAt: -1 });
 
 const IntelJob = mongoose.models.IntelJob || mongoose.model('IntelJob', intelJobSchema);
 

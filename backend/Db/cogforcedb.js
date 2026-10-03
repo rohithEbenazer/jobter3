@@ -80,6 +80,9 @@ const cogforceJobSchema = new mongoose.Schema(
 
 // Unique index compound on source and jobId
 cogforceJobSchema.index({ source: 1, jobId: 1 }, { unique: true });
+cogforceJobSchema.index({ createdAt: -1 });
+cogforceJobSchema.index({ postedDate: -1 });
+cogforceJobSchema.index({ source: 1, createdAt: -1 });
 
 const CogforceJob = mongoose.models.CogforceJob || mongoose.model('CogforceJob', cogforceJobSchema);
 

@@ -82,6 +82,9 @@ const salesforceJobSchema = new mongoose.Schema(
 
 // Compound index for unique Salesforce job IDs
 salesforceJobSchema.index({ source: 1, jobId: 1 }, { unique: true });
+salesforceJobSchema.index({ createdAt: -1 });
+salesforceJobSchema.index({ postedDate: -1 });
+salesforceJobSchema.index({ source: 1, createdAt: -1 });
 
 const SalesforceJob = mongoose.models.SalesforceJob || mongoose.model('SalesforceJob', salesforceJobSchema);
 

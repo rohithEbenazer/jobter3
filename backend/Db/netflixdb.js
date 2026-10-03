@@ -82,6 +82,9 @@ const netflixJobSchema = new mongoose.Schema(
 
 // Compound index for unique Netflix job IDs
 netflixJobSchema.index({ source: 1, jobId: 1 }, { unique: true });
+netflixJobSchema.index({ createdAt: -1 });
+netflixJobSchema.index({ postedDate: -1 });
+netflixJobSchema.index({ source: 1, createdAt: -1 });
 
 const NetflixJob = mongoose.models.NetflixJob || mongoose.model('NetflixJob', netflixJobSchema);
 

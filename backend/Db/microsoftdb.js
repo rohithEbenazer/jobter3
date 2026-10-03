@@ -80,6 +80,9 @@ const microsoftJobSchema = new mongoose.Schema(
 
 // Compound index for unique Microsoft job IDs
 microsoftJobSchema.index({ source: 1, jobId: 1 }, { unique: true });
+microsoftJobSchema.index({ createdAt: -1 });
+microsoftJobSchema.index({ postedDate: -1 });
+microsoftJobSchema.index({ source: 1, createdAt: -1 });
 
 const MicrosoftJob = mongoose.models.MicrosoftJob || mongoose.model('MicrosoftJob', microsoftJobSchema);
 

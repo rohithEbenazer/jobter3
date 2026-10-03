@@ -11,6 +11,9 @@ const { fetchAllSalesforceJobs, syncSalesforceJobsWithDb } = require('../api/sal
 const { fetchAllZohoJobs, syncZohoJobsWithDb } = require('../api/zoho.api');
 const { fetchAllIntelJobs, syncIntelJobsWithDb } = require('../api/intel.api');
 const { fetchAllNvidiaJobs, syncNvidiaJobsWithDb } = require('../api/nvidia.api');
+const { fetchAllOracleJobs, syncOracleJobsWithDb } = require('../api/oracle.api');
+const { fetchAllAmdJobs, syncAmdJobsWithDb } = require('../api/amd.api');
+const { fetchAllWiproJobs, syncWiproJobsWithDb } = require('../api/wipro.api');
 
 const { connectDB, CogforceJob } = require('../Db/cogforcedb');
 const { MicrosoftJob } = require('../Db/microsoftdb');
@@ -20,6 +23,9 @@ const { SalesforceJob } = require('../Db/salesforcedb');
 const { ZohoJob } = require('../Db/zohodb');
 const { IntelJob } = require('../Db/inteldb');
 const { NvidiaJob } = require('../Db/nvidiadb');
+const { OracleJob } = require('../Db/oracledb');
+const { AmdJob } = require('../Db/amddb');
+const { WiproJob } = require('../Db/wiprodb');
 
 /**
  * Helper to normalize company query param
@@ -55,6 +61,9 @@ router.get(['/live', '/'], async (req, res) => {
     const fetchZoho = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'zoho');
     const fetchIntel = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'intel');
     const fetchNvidia = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'nvidia');
+    const fetchOracle = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'oracle');
+    const fetchAmd = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'amd');
+    const fetchWipro = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'wipro');
 
     const tasks = [];
     if (fetchCoforge) tasks.push(fetchAllCoforgeJobs());
@@ -65,6 +74,9 @@ router.get(['/live', '/'], async (req, res) => {
     if (fetchZoho) tasks.push(fetchAllZohoJobs({ maxJobs: parseInt(maxJobs, 10) }));
     if (fetchIntel) tasks.push(fetchAllIntelJobs({ maxJobs: parseInt(maxJobs, 10) }));
     if (fetchNvidia) tasks.push(fetchAllNvidiaJobs({ maxJobs: parseInt(maxJobs, 10) }));
+    if (fetchOracle) tasks.push(fetchAllOracleJobs({ maxJobs: parseInt(maxJobs, 10) }));
+    if (fetchAmd) tasks.push(fetchAllAmdJobs({ maxJobs: parseInt(maxJobs, 10) }));
+    if (fetchWipro) tasks.push(fetchAllWiproJobs({ maxJobs: parseInt(maxJobs, 10) }));
 
     const results = await Promise.all(tasks);
     results.forEach(arr => {
@@ -149,31 +161,43 @@ router.get('/db', async (req, res) => {
     const queryZoho = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'zoho');
     const queryIntel = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'intel');
     const queryNvidia = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'nvidia');
+    const queryOracle = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'oracle');
+    const queryAmd = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'amd');
+    const queryWipro = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'wipro');
 
     const tasks = [];
     if (queryCoforge && CogforceJob) {
-      tasks.push(CogforceJob.find(filter).sort({ createdAt: -1 }));
+      tasks.push(CogforceJob.find(filter).sort({ createdAt: -1 }).allowDiskUse(true));
     }
     if (queryMicrosoft && MicrosoftJob) {
-      tasks.push(MicrosoftJob.find(filter).sort({ createdAt: -1 }));
+      tasks.push(MicrosoftJob.find(filter).sort({ createdAt: -1 }).allowDiskUse(true));
     }
     if (queryAmazon && AmazonJob) {
-      tasks.push(AmazonJob.find(filter).sort({ createdAt: -1 }));
+      tasks.push(AmazonJob.find(filter).sort({ createdAt: -1 }).allowDiskUse(true));
     }
     if (queryNetflix && NetflixJob) {
-      tasks.push(NetflixJob.find(filter).sort({ createdAt: -1 }));
+      tasks.push(NetflixJob.find(filter).sort({ createdAt: -1 }).allowDiskUse(true));
     }
     if (querySalesforce && SalesforceJob) {
-      tasks.push(SalesforceJob.find(filter).sort({ createdAt: -1 }));
+      tasks.push(SalesforceJob.find(filter).sort({ createdAt: -1 }).allowDiskUse(true));
     }
     if (queryZoho && ZohoJob) {
-      tasks.push(ZohoJob.find(filter).sort({ createdAt: -1 }));
+      tasks.push(ZohoJob.find(filter).sort({ createdAt: -1 }).allowDiskUse(true));
     }
     if (queryIntel && IntelJob) {
-      tasks.push(IntelJob.find(filter).sort({ createdAt: -1 }));
+      tasks.push(IntelJob.find(filter).sort({ createdAt: -1 }).allowDiskUse(true));
     }
     if (queryNvidia && NvidiaJob) {
-      tasks.push(NvidiaJob.find(filter).sort({ createdAt: -1 }));
+      tasks.push(NvidiaJob.find(filter).sort({ createdAt: -1 }).allowDiskUse(true));
+    }
+    if (queryOracle && OracleJob) {
+      tasks.push(OracleJob.find(filter).sort({ createdAt: -1 }).allowDiskUse(true));
+    }
+    if (queryAmd && AmdJob) {
+      tasks.push(AmdJob.find(filter).sort({ createdAt: -1 }).allowDiskUse(true));
+    }
+    if (queryWipro && WiproJob) {
+      tasks.push(WiproJob.find(filter).sort({ createdAt: -1 }).allowDiskUse(true));
     }
 
     const results = await Promise.all(tasks);
@@ -244,6 +268,9 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
     const syncZoho = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'zoho');
     const syncIntel = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'intel');
     const syncNvidia = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'nvidia');
+    const syncOracle = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'oracle');
+    const syncAmd = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'amd');
+    const syncWipro = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'wipro');
 
     let coforgeStats = null;
     let microsoftStats = null;
@@ -253,6 +280,9 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
     let zohoStats = null;
     let intelStats = null;
     let nvidiaStats = null;
+    let oracleStats = null;
+    let amdStats = null;
+    let wiproStats = null;
 
     if (syncCoforge) {
       coforgeStats = await syncCogforceJobsWithDb(CogforceJob);
@@ -278,10 +308,19 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
     if (syncNvidia) {
       nvidiaStats = await syncNvidiaJobsWithDb(NvidiaJob || CogforceJob, limit);
     }
+    if (syncOracle) {
+      oracleStats = await syncOracleJobsWithDb(OracleJob || CogforceJob, limit);
+    }
+    if (syncAmd) {
+      amdStats = await syncAmdJobsWithDb(AmdJob || CogforceJob, limit);
+    }
+    if (syncWipro) {
+      wiproStats = await syncWiproJobsWithDb(WiproJob || CogforceJob, limit);
+    }
 
-    const totalFetchedRaw = (coforgeStats?.stats?.totalFetchedRaw || 0) + (microsoftStats?.stats?.totalFetchedRaw || 0) + (amazonStats?.stats?.totalFetchedRaw || 0) + (netflixStats?.stats?.totalFetchedRaw || 0) + (salesforceStats?.stats?.totalFetchedRaw || 0) + (zohoStats?.stats?.totalFetchedRaw || 0) + (intelStats?.stats?.totalFetchedRaw || 0) + (nvidiaStats?.stats?.totalFetchedRaw || 0);
-    const insertedToDb = (coforgeStats?.stats?.insertedToDb || 0) + (microsoftStats?.stats?.insertedToDb || 0) + (amazonStats?.stats?.insertedToDb || 0) + (netflixStats?.stats?.insertedToDb || 0) + (salesforceStats?.stats?.insertedToDb || 0) + (zohoStats?.stats?.insertedToDb || 0) + (intelStats?.stats?.insertedToDb || 0) + (nvidiaStats?.stats?.insertedToDb || 0);
-    const updatedOrKeptInDb = (coforgeStats?.stats?.updatedOrKeptInDb || 0) + (microsoftStats?.stats?.updatedOrKeptInDb || 0) + (amazonStats?.stats?.updatedOrKeptInDb || 0) + (netflixStats?.stats?.updatedOrKeptInDb || 0) + (salesforceStats?.stats?.updatedOrKeptInDb || 0) + (zohoStats?.stats?.updatedOrKeptInDb || 0) + (intelStats?.stats?.updatedOrKeptInDb || 0) + (nvidiaStats?.stats?.updatedOrKeptInDb || 0);
+    const totalFetchedRaw = (coforgeStats?.stats?.totalFetchedRaw || 0) + (microsoftStats?.stats?.totalFetchedRaw || 0) + (amazonStats?.stats?.totalFetchedRaw || 0) + (netflixStats?.stats?.totalFetchedRaw || 0) + (salesforceStats?.stats?.totalFetchedRaw || 0) + (zohoStats?.stats?.totalFetchedRaw || 0) + (intelStats?.stats?.totalFetchedRaw || 0) + (nvidiaStats?.stats?.totalFetchedRaw || 0) + (oracleStats?.stats?.totalFetchedRaw || 0) + (amdStats?.stats?.totalFetchedRaw || 0) + (wiproStats?.stats?.totalFetchedRaw || 0);
+    const insertedToDb = (coforgeStats?.stats?.insertedToDb || 0) + (microsoftStats?.stats?.insertedToDb || 0) + (amazonStats?.stats?.insertedToDb || 0) + (netflixStats?.stats?.insertedToDb || 0) + (salesforceStats?.stats?.insertedToDb || 0) + (zohoStats?.stats?.insertedToDb || 0) + (intelStats?.stats?.insertedToDb || 0) + (nvidiaStats?.stats?.insertedToDb || 0) + (oracleStats?.stats?.insertedToDb || 0) + (amdStats?.stats?.insertedToDb || 0) + (wiproStats?.stats?.insertedToDb || 0);
+    const updatedOrKeptInDb = (coforgeStats?.stats?.updatedOrKeptInDb || 0) + (microsoftStats?.stats?.updatedOrKeptInDb || 0) + (amazonStats?.stats?.updatedOrKeptInDb || 0) + (netflixStats?.stats?.updatedOrKeptInDb || 0) + (salesforceStats?.stats?.updatedOrKeptInDb || 0) + (zohoStats?.stats?.updatedOrKeptInDb || 0) + (intelStats?.stats?.updatedOrKeptInDb || 0) + (nvidiaStats?.stats?.updatedOrKeptInDb || 0) + (oracleStats?.stats?.updatedOrKeptInDb || 0) + (amdStats?.stats?.updatedOrKeptInDb || 0) + (wiproStats?.stats?.updatedOrKeptInDb || 0);
 
     const countCoforge = CogforceJob ? await CogforceJob.countDocuments() : 0;
     const countMicrosoft = MicrosoftJob ? await MicrosoftJob.countDocuments() : 0;
@@ -291,7 +330,10 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
     const countZoho = ZohoJob ? await ZohoJob.countDocuments() : 0;
     const countIntel = IntelJob ? await IntelJob.countDocuments() : 0;
     const countNvidia = NvidiaJob ? await NvidiaJob.countDocuments() : 0;
-    const finalDbCount = countCoforge + countMicrosoft + countAmazon + countNetflix + countSalesforce + countZoho + countIntel + countNvidia;
+    const countOracle = OracleJob ? await OracleJob.countDocuments() : 0;
+    const countAmd = AmdJob ? await AmdJob.countDocuments() : 0;
+    const countWipro = WiproJob ? await WiproJob.countDocuments() : 0;
+    const finalDbCount = countCoforge + countMicrosoft + countAmazon + countNetflix + countSalesforce + countZoho + countIntel + countNvidia + countOracle + countAmd + countWipro;
 
     res.json({
       success: true,
@@ -308,7 +350,10 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
         salesforce: salesforceStats?.stats || null,
         zoho: zohoStats?.stats || null,
         intel: intelStats?.stats || null,
-        nvidia: nvidiaStats?.stats || null
+        nvidia: nvidiaStats?.stats || null,
+        oracle: oracleStats?.stats || null,
+        amd: amdStats?.stats || null,
+        wipro: wiproStats?.stats || null
       }
     });
   } catch (err) {
@@ -346,6 +391,15 @@ router.get('/:id', async (req, res) => {
       }
       if (!dbJob && NvidiaJob) {
         dbJob = await NvidiaJob.findOne({ $or: [{ jobId: String(id) }, { id: String(id) }] });
+      }
+      if (!dbJob && OracleJob) {
+        dbJob = await OracleJob.findOne({ $or: [{ jobId: String(id) }, { id: String(id) }] });
+      }
+      if (!dbJob && AmdJob) {
+        dbJob = await AmdJob.findOne({ $or: [{ jobId: String(id) }, { id: String(id) }] });
+      }
+      if (!dbJob && WiproJob) {
+        dbJob = await WiproJob.findOne({ $or: [{ jobId: String(id) }, { id: String(id) }] });
       }
       if (dbJob) {
         return res.json({ success: true, job: dbJob });

@@ -82,6 +82,9 @@ const nvidiaJobSchema = new mongoose.Schema(
 
 // Compound index for unique NVIDIA job IDs
 nvidiaJobSchema.index({ source: 1, jobId: 1 }, { unique: true });
+nvidiaJobSchema.index({ createdAt: -1 });
+nvidiaJobSchema.index({ postedDate: -1 });
+nvidiaJobSchema.index({ source: 1, createdAt: -1 });
 
 const NvidiaJob = mongoose.models.NvidiaJob || mongoose.model('NvidiaJob', nvidiaJobSchema);
 

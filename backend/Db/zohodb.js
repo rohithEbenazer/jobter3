@@ -82,6 +82,9 @@ const zohoJobSchema = new mongoose.Schema(
 
 // Compound index for unique Zoho job IDs
 zohoJobSchema.index({ source: 1, jobId: 1 }, { unique: true });
+zohoJobSchema.index({ createdAt: -1 });
+zohoJobSchema.index({ postedDate: -1 });
+zohoJobSchema.index({ source: 1, createdAt: -1 });
 
 const ZohoJob = mongoose.models.ZohoJob || mongoose.model('ZohoJob', zohoJobSchema);
 

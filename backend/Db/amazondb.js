@@ -80,6 +80,9 @@ const amazonJobSchema = new mongoose.Schema(
 
 // Compound index for unique Amazon job IDs
 amazonJobSchema.index({ source: 1, jobId: 1 }, { unique: true });
+amazonJobSchema.index({ createdAt: -1 });
+amazonJobSchema.index({ postedDate: -1 });
+amazonJobSchema.index({ source: 1, createdAt: -1 });
 
 const AmazonJob = mongoose.models.AmazonJob || mongoose.model('AmazonJob', amazonJobSchema);
 

@@ -161,6 +161,36 @@ const AdminControls = ({ selectedCompany = 'All', onSelectCompany, onSyncSuccess
               />
               💚 NVIDIA
             </label>
+            <label className={`company-chip ${selectedCompany === 'Oracle' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="Oracle"
+                checked={selectedCompany === 'Oracle'}
+                onChange={() => handleCompanyChange('Oracle')}
+              />
+              🔴 Oracle
+            </label>
+            <label className={`company-chip ${selectedCompany === 'AMD' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="AMD"
+                checked={selectedCompany === 'AMD'}
+                onChange={() => handleCompanyChange('AMD')}
+              />
+              🟥 AMD
+            </label>
+            <label className={`company-chip ${selectedCompany === 'Wipro' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="Wipro"
+                checked={selectedCompany === 'Wipro'}
+                onChange={() => handleCompanyChange('Wipro')}
+              />
+              🟣 Wipro
+            </label>
           </div>
         </div>
 

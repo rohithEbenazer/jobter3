@@ -15,6 +15,30 @@ const PORTAL_LIST = [
     description: 'Official global job search portal for American Express Engineering, Product, and Finance careers.'
   },
   {
+    id: 'persistent',
+    name: 'Persistent Systems',
+    code: 'PERSISTENT',
+    category: 'Digital Engineering & Cloud Solutions',
+    system: 'Zwayam ATS API',
+    icon: '🌐',
+    badgeColor: 'linear-gradient(135deg, #e05206, #7a2600)',
+    officialUrl: 'https://careers.persistent.com/',
+    apiUrl: 'https://public.zwayam.com/jobs/search',
+    description: 'Official global digital engineering, cloud, data engineering, and software careers at Persistent Systems.'
+  },
+  {
+    id: 'unisys',
+    name: 'Unisys',
+    code: 'UNISYS',
+    category: 'IT Services & Cloud Infrastructure',
+    system: 'Workday Recruiting API',
+    icon: '🖥️',
+    badgeColor: 'linear-gradient(135deg, #005c97, #363795)',
+    officialUrl: 'https://unisys.wd5.myworkdayjobs.com/en-US/External',
+    apiUrl: 'https://unisys.wd5.myworkdayjobs.com/wday/cxs/unisys/External/jobs',
+    description: 'Official global IT services, cloud infrastructure, cybersecurity, and digital workplace careers at Unisys.'
+  },
+  {
     id: 'virtusa',
     name: 'Virtusa',
     code: 'VIRTUSA',

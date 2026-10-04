@@ -311,6 +311,26 @@ const AdminControls = ({ selectedCompany = 'All', onSelectCompany, onSyncSuccess
               />
               💳 American Express
             </label>
+            <label className={`company-chip ${selectedCompany === 'Persistent' || selectedCompany === 'Persistent Systems' || selectedCompany === 'PS' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="Persistent"
+                checked={selectedCompany === 'Persistent' || selectedCompany === 'Persistent Systems' || selectedCompany === 'PS'}
+                onChange={() => handleCompanyChange('Persistent')}
+              />
+              🌐 Persistent Systems
+            </label>
+            <label className={`company-chip ${selectedCompany === 'Unisys' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="Unisys"
+                checked={selectedCompany === 'Unisys'}
+                onChange={() => handleCompanyChange('Unisys')}
+              />
+              🖥️ Unisys Workday
+            </label>
           </div>
         </div>
 

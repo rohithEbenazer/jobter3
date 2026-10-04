@@ -47,7 +47,7 @@ const UserPage = ({ onViewDetails, showToast }) => {
             setAllDbJobs(liveData);
             return;
           }
-        } catch (e) {}
+        } catch (e) { }
       }
 
       if (data.success && Array.isArray(data.jobs) && data.jobs.length > 0) {
@@ -61,7 +61,7 @@ const UserPage = ({ onViewDetails, showToast }) => {
           if (Array.isArray(liveData) && liveData.length > 0) {
             setAllDbJobs(liveData);
           }
-        } catch (e) {}
+        } catch (e) { }
       }
     } catch (err) {
       console.error('Fetch DB jobs error:', err);

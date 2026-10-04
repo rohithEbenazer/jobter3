@@ -201,6 +201,86 @@ const AdminControls = ({ selectedCompany = 'All', onSelectCompany, onSyncSuccess
               />
               🛍️ Meesho
             </label>
+            <label className={`company-chip ${selectedCompany === 'Capgemini' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="Capgemini"
+                checked={selectedCompany === 'Capgemini'}
+                onChange={() => handleCompanyChange('Capgemini')}
+              />
+              🔷 Capgemini
+            </label>
+            <label className={`company-chip ${selectedCompany === 'GoldmanSachs' || selectedCompany === 'Goldman Sachs' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="GoldmanSachs"
+                checked={selectedCompany === 'GoldmanSachs' || selectedCompany === 'Goldman Sachs'}
+                onChange={() => handleCompanyChange('GoldmanSachs')}
+              />
+              🏛️ Goldman Sachs
+            </label>
+            <label className={`company-chip ${selectedCompany === 'Qualcomm' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="Qualcomm"
+                checked={selectedCompany === 'Qualcomm'}
+                onChange={() => handleCompanyChange('Qualcomm')}
+              />
+              📱 Qualcomm
+            </label>
+            <label className={`company-chip ${selectedCompany === 'TCS' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="TCS"
+                checked={selectedCompany === 'TCS'}
+                onChange={() => handleCompanyChange('TCS')}
+              />
+              🏢 TCS iBegin
+            </label>
+            <label className={`company-chip ${selectedCompany === 'Genpact' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="Genpact"
+                checked={selectedCompany === 'Genpact'}
+                onChange={() => handleCompanyChange('Genpact')}
+              />
+              💼 Genpact Workday
+            </label>
+            <label className={`company-chip ${selectedCompany === 'JPMC' || selectedCompany === 'JPMorgan' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="JPMC"
+                checked={selectedCompany === 'JPMC' || selectedCompany === 'JPMorgan'}
+                onChange={() => handleCompanyChange('JPMC')}
+              />
+              🏦 JPMorgan Chase
+            </label>
+            <label className={`company-chip ${selectedCompany === 'Swiggy' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="Swiggy"
+                checked={selectedCompany === 'Swiggy'}
+                onChange={() => handleCompanyChange('Swiggy')}
+              />
+              🛵 Swiggy
+            </label>
+            <label className={`company-chip ${selectedCompany === 'BrowserStack' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="BrowserStack"
+                checked={selectedCompany === 'BrowserStack'}
+                onChange={() => handleCompanyChange('BrowserStack')}
+              />
+              💻 BrowserStack Workday
+            </label>
           </div>
         </div>
 

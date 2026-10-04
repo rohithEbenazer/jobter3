@@ -56,6 +56,14 @@ const oracleRouter = require('./Route/oracle.route');
 const amdRouter = require('./Route/amd.route');
 const wiproRouter = require('./Route/wipro.route');
 const meeshoRouter = require('./Route/meesho.route');
+const capgeminiRouter = require('./Route/capgemini.route');
+const goldmanSachsRouter = require('./Route/goldmansachs.route');
+const qualcommRouter = require('./Route/qualcomm.route');
+const tcsRouter = require('./Route/tcs.route');
+const genpactRouter = require('./Route/genpact.route');
+const jpmcRouter = require('./Route/jpmc.route');
+const swiggyRouter = require('./Route/swiggy.route');
+const browserstackRouter = require('./Route/browserstack.route');
 const jobsRouter = require('./Route/jobs.route');
 
 // Dedicated company routes
@@ -72,6 +80,17 @@ app.use('/api/jobs/oracle', oracleRouter);
 app.use('/api/jobs/amd', amdRouter);
 app.use('/api/jobs/wipro', wiproRouter);
 app.use('/api/jobs/meesho', meeshoRouter);
+app.use('/api/jobs/capgemini', capgeminiRouter);
+app.use('/api/jobs/goldmansachs', goldmanSachsRouter);
+app.use('/api/jobs/gs', goldmanSachsRouter);
+app.use('/api/jobs/qualcomm', qualcommRouter);
+app.use('/api/jobs/tcs', tcsRouter);
+app.use('/api/jobs/tcsibegin', tcsRouter);
+app.use('/api/jobs/genpact', genpactRouter);
+app.use('/api/jobs/jpmc', jpmcRouter);
+app.use('/api/jobs/jpmorgan', jpmcRouter);
+app.use('/api/jobs/swiggy', swiggyRouter);
+app.use('/api/jobs/browserstack', browserstackRouter);
 
 // Primary unified jobs route: handles /api/jobs (db, sync, live, :id) with company filtering
 app.use('/api/jobs', jobsRouter);

@@ -12,7 +12,7 @@ const JobModal = ({ job, onClose }) => {
     <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && onClose()}>
       <div className="modal-card">
         <button className="modal-close" onClick={onClose}>✕</button>
-        
+
         <div className="modal-header">
           <span className="modal-company">{job.company || 'Coforge'}</span>
           <h2>{job.title}</h2>

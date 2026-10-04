@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './LivePreviewModal.css';
-import { API_BASE, COFORGE_API_BASE, MICROSOFT_API_BASE, AMAZON_API_BASE, NETFLIX_API_BASE, SALESFORCE_API_BASE, ZOHO_API_BASE, INTEL_API_BASE, NVIDIA_API_BASE, ORACLE_API_BASE, AMD_API_BASE, WIPRO_API_BASE, MEESHO_API_BASE } from '../../utils/apiConfig';
+import { API_BASE, COFORGE_API_BASE, MICROSOFT_API_BASE, AMAZON_API_BASE, NETFLIX_API_BASE, SALESFORCE_API_BASE, ZOHO_API_BASE, INTEL_API_BASE, NVIDIA_API_BASE, ORACLE_API_BASE, AMD_API_BASE, WIPRO_API_BASE, MEESHO_API_BASE, CAPGEMINI_API_BASE, GOLDMAN_SACHS_API_BASE, QUALCOMM_API_BASE, TCS_API_BASE, GENPACT_API_BASE, JPMC_API_BASE, SWIGGY_API_BASE, BROWSERSTACK_API_BASE } from '../../utils/apiConfig';
 
 const LivePreviewModal = ({ initialCompany = 'All', onClose, showToast }) => {
-  const [companyTab, setCompanyTab] = useState(initialCompany); // 'All' | 'Coforge' | 'Microsoft' | 'Amazon' | 'Netflix' | 'Salesforce' | 'Zoho' | 'Intel' | 'NVIDIA' | 'Oracle' | 'AMD' | 'Wipro' | 'Meesho'
+  const [companyTab, setCompanyTab] = useState(initialCompany); // 'All' | 'Coforge' | 'Microsoft' | 'Amazon' | 'Netflix' | 'Salesforce' | 'Zoho' | 'Intel' | 'NVIDIA' | 'Oracle' | 'AMD' | 'Wipro' | 'Meesho' | 'Capgemini' | 'GoldmanSachs' | 'Qualcomm' | 'TCS' | 'Genpact'
   const [liveJobs, setLiveJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -39,6 +39,22 @@ const LivePreviewModal = ({ initialCompany = 'All', onClose, showToast }) => {
           url = `${WIPRO_API_BASE}/live`;
         } else if (companyTab === 'Meesho') {
           url = `${MEESHO_API_BASE}/live`;
+        } else if (companyTab === 'Capgemini') {
+          url = `${CAPGEMINI_API_BASE}/live`;
+        } else if (companyTab === 'GoldmanSachs' || companyTab === 'Goldman Sachs') {
+          url = `${GOLDMAN_SACHS_API_BASE}/live`;
+        } else if (companyTab === 'Qualcomm') {
+          url = `${QUALCOMM_API_BASE}/live`;
+        } else if (companyTab === 'TCS') {
+          url = `${TCS_API_BASE}/live`;
+        } else if (companyTab === 'Genpact') {
+          url = `${GENPACT_API_BASE}/live`;
+        } else if (companyTab === 'JPMC' || companyTab === 'JPMorgan') {
+          url = `${JPMC_API_BASE}/live`;
+        } else if (companyTab === 'Swiggy') {
+          url = `${SWIGGY_API_BASE}/live`;
+        } else if (companyTab === 'BrowserStack') {
+          url = `${BROWSERSTACK_API_BASE}/live`;
         }
 
         const res = await fetch(url);
@@ -146,6 +162,54 @@ const LivePreviewModal = ({ initialCompany = 'All', onClose, showToast }) => {
               onClick={() => setCompanyTab('Meesho')}
             >
               Meesho
+            </button>
+            <button
+              className={`modal-tab ${companyTab === 'Capgemini' ? 'active' : ''}`}
+              onClick={() => setCompanyTab('Capgemini')}
+            >
+              Capgemini
+            </button>
+            <button
+              className={`modal-tab ${companyTab === 'GoldmanSachs' || companyTab === 'Goldman Sachs' ? 'active' : ''}`}
+              onClick={() => setCompanyTab('GoldmanSachs')}
+            >
+              Goldman Sachs
+            </button>
+            <button
+              className={`modal-tab ${companyTab === 'Qualcomm' ? 'active' : ''}`}
+              onClick={() => setCompanyTab('Qualcomm')}
+            >
+              Qualcomm
+            </button>
+            <button
+              className={`modal-tab ${companyTab === 'TCS' ? 'active' : ''}`}
+              onClick={() => setCompanyTab('TCS')}
+            >
+              TCS iBegin
+            </button>
+            <button
+              className={`modal-tab ${companyTab === 'Genpact' ? 'active' : ''}`}
+              onClick={() => setCompanyTab('Genpact')}
+            >
+              Genpact
+            </button>
+            <button
+              className={`modal-tab ${companyTab === 'JPMC' || companyTab === 'JPMorgan' ? 'active' : ''}`}
+              onClick={() => setCompanyTab('JPMC')}
+            >
+              JPMorgan Chase
+            </button>
+            <button
+              className={`modal-tab ${companyTab === 'Swiggy' ? 'active' : ''}`}
+              onClick={() => setCompanyTab('Swiggy')}
+            >
+              Swiggy
+            </button>
+            <button
+              className={`modal-tab ${companyTab === 'BrowserStack' ? 'active' : ''}`}
+              onClick={() => setCompanyTab('BrowserStack')}
+            >
+              BrowserStack
             </button>
           </div>
         </div>

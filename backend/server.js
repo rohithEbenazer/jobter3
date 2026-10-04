@@ -69,6 +69,7 @@ const datadogRouter = require('./Route/datadog.route');
 const americanexpressRouter = require('./Route/americanexpress.route');
 const persistentRouter = require('./Route/persistent.route');
 const unisysRouter = require('./Route/unisys.route');
+const flextronicsRouter = require('./Route/flextronics.route');
 const jobsRouter = require('./Route/jobs.route');
 
 // Dedicated company routes
@@ -104,6 +105,8 @@ app.use('/api/jobs/amex', americanexpressRouter);
 app.use('/api/jobs/persistent', persistentRouter);
 app.use('/api/jobs/ps', persistentRouter);
 app.use('/api/jobs/unisys', unisysRouter);
+app.use('/api/jobs/flextronics', flextronicsRouter);
+app.use('/api/jobs/flex', flextronicsRouter);
 
 // Primary unified jobs route: handles /api/jobs (db, sync, live, :id) with company filtering
 app.use('/api/jobs', jobsRouter);

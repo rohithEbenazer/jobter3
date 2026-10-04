@@ -27,6 +27,18 @@ const PORTAL_LIST = [
     description: 'Official global digital engineering, cloud, data engineering, and software careers at Persistent Systems.'
   },
   {
+    id: 'flextronics',
+    name: 'Flextronics (Flex)',
+    code: 'FLEX',
+    category: 'Electronics Manufacturing & Supply Chain',
+    system: 'Workday Recruiting API',
+    icon: '⚡',
+    badgeColor: 'linear-gradient(135deg, #00843d, #004d25)',
+    officialUrl: 'https://flextronics.wd1.myworkdayjobs.com/Careers?source=Flex_Career_Site',
+    apiUrl: 'https://flextronics.wd1.myworkdayjobs.com/wday/cxs/flextronics/Careers/jobs',
+    description: 'Official global electronics manufacturing, supply chain solutions, and engineering careers at Flex (Flextronics).'
+  },
+  {
     id: 'unisys',
     name: 'Unisys',
     code: 'UNISYS',

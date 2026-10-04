@@ -33,3 +33,4 @@ export const DATADOG_API_BASE = `${API_HOST}/api/jobs/datadog`;
 export const AMERICAN_EXPRESS_API_BASE = `${API_HOST}/api/jobs/americanexpress`;
 export const PERSISTENT_API_BASE = `${API_HOST}/api/jobs/persistent`;
 export const UNISYS_API_BASE = `${API_HOST}/api/jobs/unisys`;
+export const FLEXTRONICS_API_BASE = `${API_HOST}/api/jobs/flextronics`;

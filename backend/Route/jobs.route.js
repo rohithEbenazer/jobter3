@@ -24,6 +24,8 @@ const { fetchAllJpmcJobs, syncJpmcJobsWithDb } = require('../api/jpmc.api');
 const { fetchAllSwiggyJobs, syncSwiggyJobsWithDb } = require('../api/swiggy.api');
 const { fetchAllBrowserStackJobs, syncBrowserStackJobsWithDb } = require('../api/browserstack.api');
 const { fetchAllBroadcomJobs, syncBroadcomJobsWithDb } = require('../api/broadcom.api');
+const { fetchAllDataDogJobs, syncDataDogJobsWithDb } = require('../api/datadog.api');
+const { fetchAllAmexJobs, syncAmexJobsWithDb } = require('../api/americanexpress.api');
 
 const { connectDB, CogforceJob } = require('../Db/cogforcedb');
 const { MicrosoftJob } = require('../Db/microsoftdb');
@@ -46,6 +48,8 @@ const { JpmcJob } = require('../Db/jpmcdb');
 const { SwiggyJob } = require('../Db/swiggydb');
 const { BrowserStackJob } = require('../Db/browserstackdb');
 const { BroadcomJob } = require('../Db/broadcomdb');
+const { DataDogJob } = require('../Db/datadogdb');
+const { AmericanExpressJob } = require('../Db/americanexpressdb');
 
 /**
  * Helper to normalize company query param
@@ -94,6 +98,8 @@ router.get(['/live', '/'], async (req, res) => {
     const fetchSwiggy = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'swiggy');
     const fetchBrowserStack = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'browserstack' || c.toLowerCase() === 'bs');
     const fetchBroadcom = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'broadcom' || c.toLowerCase() === 'bc');
+    const fetchDataDog = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'datadog' || c.toLowerCase() === 'dd');
+    const fetchAmex = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'americanexpress' || c.toLowerCase() === 'american express' || c.toLowerCase() === 'amex');
 
     const tasks = [];
     if (fetchCoforge) tasks.push(fetchAllCoforgeJobs());
@@ -117,6 +123,8 @@ router.get(['/live', '/'], async (req, res) => {
     if (fetchSwiggy) tasks.push(fetchAllSwiggyJobs({ maxJobs: parseInt(maxJobs, 10) }));
     if (fetchBrowserStack) tasks.push(fetchAllBrowserStackJobs({ maxJobs: parseInt(maxJobs, 10) }));
     if (fetchBroadcom) tasks.push(fetchAllBroadcomJobs({ maxJobs: parseInt(maxJobs, 10) }));
+    if (fetchDataDog) tasks.push(fetchAllDataDogJobs({ maxJobs: parseInt(maxJobs, 10) }));
+    if (fetchAmex) tasks.push(fetchAllAmexJobs({ maxJobs: parseInt(maxJobs, 10) }));
 
     const results = await Promise.all(tasks);
     results.forEach(arr => {
@@ -213,6 +221,8 @@ router.get('/db', async (req, res) => {
     const querySwiggy = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'swiggy');
     const queryBrowserStack = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'browserstack' || c.toLowerCase() === 'bs');
     const queryBroadcom = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'broadcom' || c.toLowerCase() === 'bc');
+    const queryDataDog = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'datadog' || c.toLowerCase() === 'dd');
+    const queryAmex = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'americanexpress' || c.toLowerCase() === 'american express' || c.toLowerCase() === 'amex');
 
     const tasks = [];
     if (queryCoforge && CogforceJob) {
@@ -277,6 +287,12 @@ router.get('/db', async (req, res) => {
     }
     if (queryBroadcom && BroadcomJob) {
       tasks.push(BroadcomJob.find(filter).sort({ createdAt: -1 }).allowDiskUse(true));
+    }
+    if (queryDataDog && DataDogJob) {
+      tasks.push(DataDogJob.find(filter).sort({ createdAt: -1 }).allowDiskUse(true));
+    }
+    if (queryAmex && AmericanExpressJob) {
+      tasks.push(AmericanExpressJob.find(filter).sort({ createdAt: -1 }).allowDiskUse(true));
     }
 
     const results = await Promise.all(tasks);
@@ -360,6 +376,8 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
     const syncSwiggy = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'swiggy');
     const syncBrowserStack = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'browserstack' || c.toLowerCase() === 'bs');
     const syncBroadcom = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'broadcom' || c.toLowerCase() === 'bc');
+    const syncDataDog = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'datadog' || c.toLowerCase() === 'dd');
+    const syncAmex = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'americanexpress' || c.toLowerCase() === 'american express' || c.toLowerCase() === 'amex');
 
     let coforgeStats = null;
     let microsoftStats = null;
@@ -382,6 +400,8 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
     let swiggyStats = null;
     let browserStackStats = null;
     let broadcomStats = null;
+    let dataDogStats = null;
+    let amexStats = null;
 
     if (syncCoforge) {
       coforgeStats = await syncCogforceJobsWithDb(CogforceJob);
@@ -446,10 +466,16 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
     if (syncBroadcom) {
       broadcomStats = await syncBroadcomJobsWithDb(BroadcomJob || CogforceJob, limit);
     }
+    if (syncDataDog) {
+      dataDogStats = await syncDataDogJobsWithDb(DataDogJob || CogforceJob, limit);
+    }
+    if (syncAmex) {
+      amexStats = await syncAmexJobsWithDb(AmericanExpressJob || CogforceJob, limit);
+    }
 
-    const totalFetchedRaw = (coforgeStats?.stats?.totalFetchedRaw || 0) + (microsoftStats?.stats?.totalFetchedRaw || 0) + (amazonStats?.stats?.totalFetchedRaw || 0) + (netflixStats?.stats?.totalFetchedRaw || 0) + (salesforceStats?.stats?.totalFetchedRaw || 0) + (zohoStats?.stats?.totalFetchedRaw || 0) + (intelStats?.stats?.totalFetchedRaw || 0) + (nvidiaStats?.stats?.totalFetchedRaw || 0) + (oracleStats?.stats?.totalFetchedRaw || 0) + (amdStats?.stats?.totalFetchedRaw || 0) + (wiproStats?.stats?.totalFetchedRaw || 0) + (meeshoStats?.stats?.totalFetchedRaw || 0) + (capgeminiStats?.stats?.totalFetchedRaw || 0) + (goldmanSachsStats?.stats?.totalFetchedRaw || 0) + (qualcommStats?.stats?.totalFetchedRaw || 0) + (tcsStats?.stats?.totalFetchedRaw || 0) + (genpactStats?.stats?.totalFetchedRaw || 0) + (jpmcStats?.stats?.totalFetchedRaw || 0) + (swiggyStats?.stats?.totalFetchedRaw || 0) + (browserStackStats?.stats?.totalFetchedRaw || 0);
-    const insertedToDb = (coforgeStats?.stats?.insertedToDb || 0) + (microsoftStats?.stats?.insertedToDb || 0) + (amazonStats?.stats?.insertedToDb || 0) + (netflixStats?.stats?.insertedToDb || 0) + (salesforceStats?.stats?.insertedToDb || 0) + (zohoStats?.stats?.insertedToDb || 0) + (intelStats?.stats?.insertedToDb || 0) + (nvidiaStats?.stats?.insertedToDb || 0) + (oracleStats?.stats?.insertedToDb || 0) + (amdStats?.stats?.insertedToDb || 0) + (wiproStats?.stats?.insertedToDb || 0) + (meeshoStats?.stats?.insertedToDb || 0) + (capgeminiStats?.stats?.insertedToDb || 0) + (goldmanSachsStats?.stats?.insertedToDb || 0) + (qualcommStats?.stats?.insertedToDb || 0) + (tcsStats?.stats?.insertedToDb || 0) + (genpactStats?.stats?.insertedToDb || 0) + (jpmcStats?.stats?.insertedToDb || 0) + (swiggyStats?.stats?.insertedToDb || 0) + (browserStackStats?.stats?.insertedToDb || 0);
-    const updatedOrKeptInDb = (coforgeStats?.stats?.updatedOrKeptInDb || 0) + (microsoftStats?.stats?.updatedOrKeptInDb || 0) + (amazonStats?.stats?.updatedOrKeptInDb || 0) + (netflixStats?.stats?.updatedOrKeptInDb || 0) + (salesforceStats?.stats?.updatedOrKeptInDb || 0) + (zohoStats?.stats?.updatedOrKeptInDb || 0) + (intelStats?.stats?.updatedOrKeptInDb || 0) + (nvidiaStats?.stats?.updatedOrKeptInDb || 0) + (oracleStats?.stats?.updatedOrKeptInDb || 0) + (amdStats?.stats?.updatedOrKeptInDb || 0) + (wiproStats?.stats?.updatedOrKeptInDb || 0) + (meeshoStats?.stats?.updatedOrKeptInDb || 0) + (capgeminiStats?.stats?.updatedOrKeptInDb || 0) + (goldmanSachsStats?.stats?.updatedOrKeptInDb || 0) + (qualcommStats?.stats?.updatedOrKeptInDb || 0) + (tcsStats?.stats?.updatedOrKeptInDb || 0) + (genpactStats?.stats?.updatedOrKeptInDb || 0) + (jpmcStats?.stats?.updatedOrKeptInDb || 0) + (swiggyStats?.stats?.updatedOrKeptInDb || 0) + (browserStackStats?.stats?.updatedOrKeptInDb || 0);
+    const totalFetchedRaw = (coforgeStats?.stats?.totalFetchedRaw || 0) + (microsoftStats?.stats?.totalFetchedRaw || 0) + (amazonStats?.stats?.totalFetchedRaw || 0) + (netflixStats?.stats?.totalFetchedRaw || 0) + (salesforceStats?.stats?.totalFetchedRaw || 0) + (zohoStats?.stats?.totalFetchedRaw || 0) + (intelStats?.stats?.totalFetchedRaw || 0) + (nvidiaStats?.stats?.totalFetchedRaw || 0) + (oracleStats?.stats?.totalFetchedRaw || 0) + (amdStats?.stats?.totalFetchedRaw || 0) + (wiproStats?.stats?.totalFetchedRaw || 0) + (meeshoStats?.stats?.totalFetchedRaw || 0) + (capgeminiStats?.stats?.totalFetchedRaw || 0) + (goldmanSachsStats?.stats?.totalFetchedRaw || 0) + (qualcommStats?.stats?.totalFetchedRaw || 0) + (tcsStats?.stats?.totalFetchedRaw || 0) + (genpactStats?.stats?.totalFetchedRaw || 0) + (jpmcStats?.stats?.totalFetchedRaw || 0) + (swiggyStats?.stats?.totalFetchedRaw || 0) + (browserStackStats?.stats?.totalFetchedRaw || 0) + (broadcomStats?.stats?.totalFetchedRaw || 0) + (dataDogStats?.stats?.totalFetchedRaw || 0) + (amexStats?.stats?.totalFetchedRaw || 0);
+    const insertedToDb = (coforgeStats?.stats?.insertedToDb || 0) + (microsoftStats?.stats?.insertedToDb || 0) + (amazonStats?.stats?.insertedToDb || 0) + (netflixStats?.stats?.insertedToDb || 0) + (salesforceStats?.stats?.insertedToDb || 0) + (zohoStats?.stats?.insertedToDb || 0) + (intelStats?.stats?.insertedToDb || 0) + (nvidiaStats?.stats?.insertedToDb || 0) + (oracleStats?.stats?.insertedToDb || 0) + (amdStats?.stats?.insertedToDb || 0) + (wiproStats?.stats?.insertedToDb || 0) + (meeshoStats?.stats?.insertedToDb || 0) + (capgeminiStats?.stats?.insertedToDb || 0) + (goldmanSachsStats?.stats?.insertedToDb || 0) + (qualcommStats?.stats?.insertedToDb || 0) + (tcsStats?.stats?.insertedToDb || 0) + (genpactStats?.stats?.insertedToDb || 0) + (jpmcStats?.stats?.insertedToDb || 0) + (swiggyStats?.stats?.insertedToDb || 0) + (browserStackStats?.stats?.insertedToDb || 0) + (broadcomStats?.stats?.insertedToDb || 0) + (dataDogStats?.stats?.insertedToDb || 0) + (amexStats?.stats?.insertedToDb || 0);
+    const updatedOrKeptInDb = (coforgeStats?.stats?.updatedOrKeptInDb || 0) + (microsoftStats?.stats?.updatedOrKeptInDb || 0) + (amazonStats?.stats?.updatedOrKeptInDb || 0) + (netflixStats?.stats?.updatedOrKeptInDb || 0) + (salesforceStats?.stats?.updatedOrKeptInDb || 0) + (zohoStats?.stats?.updatedOrKeptInDb || 0) + (intelStats?.stats?.updatedOrKeptInDb || 0) + (nvidiaStats?.stats?.updatedOrKeptInDb || 0) + (oracleStats?.stats?.updatedOrKeptInDb || 0) + (amdStats?.stats?.updatedOrKeptInDb || 0) + (wiproStats?.stats?.updatedOrKeptInDb || 0) + (meeshoStats?.stats?.updatedOrKeptInDb || 0) + (capgeminiStats?.stats?.updatedOrKeptInDb || 0) + (goldmanSachsStats?.stats?.updatedOrKeptInDb || 0) + (qualcommStats?.stats?.updatedOrKeptInDb || 0) + (tcsStats?.stats?.updatedOrKeptInDb || 0) + (genpactStats?.stats?.updatedOrKeptInDb || 0) + (jpmcStats?.stats?.updatedOrKeptInDb || 0) + (swiggyStats?.stats?.updatedOrKeptInDb || 0) + (browserStackStats?.stats?.updatedOrKeptInDb || 0) + (broadcomStats?.stats?.updatedOrKeptInDb || 0) + (dataDogStats?.stats?.updatedOrKeptInDb || 0) + (amexStats?.stats?.updatedOrKeptInDb || 0);
 
     const countCoforge = CogforceJob ? await CogforceJob.countDocuments() : 0;
     const countMicrosoft = MicrosoftJob ? await MicrosoftJob.countDocuments() : 0;
@@ -472,7 +498,9 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
     const countSwiggy = SwiggyJob ? await SwiggyJob.countDocuments() : 0;
     const countBrowserStack = BrowserStackJob ? await BrowserStackJob.countDocuments() : 0;
     const countBroadcom = BroadcomJob ? await BroadcomJob.countDocuments() : 0;
-    const finalDbCount = countCoforge + countMicrosoft + countAmazon + countNetflix + countSalesforce + countZoho + countIntel + countNvidia + countOracle + countAmd + countWipro + countMeesho + countCapgemini + countGoldmanSachs + countQualcomm + countTcs + countGenpact + countJpmc + countSwiggy + countBrowserStack + countBroadcom;
+    const countDataDog = DataDogJob ? await DataDogJob.countDocuments() : 0;
+    const countAmex = AmericanExpressJob ? await AmericanExpressJob.countDocuments() : 0;
+    const finalDbCount = countCoforge + countMicrosoft + countAmazon + countNetflix + countSalesforce + countZoho + countIntel + countNvidia + countOracle + countAmd + countWipro + countMeesho + countCapgemini + countGoldmanSachs + countQualcomm + countTcs + countGenpact + countJpmc + countSwiggy + countBrowserStack + countBroadcom + countDataDog + countAmex;
 
     res.json({
       success: true,
@@ -502,7 +530,9 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
         jpmc: jpmcStats?.stats || null,
         swiggy: swiggyStats?.stats || null,
         browserstack: browserStackStats?.stats || null,
-        broadcom: broadcomStats?.stats || null
+        broadcom: broadcomStats?.stats || null,
+        datadog: dataDogStats?.stats || null,
+        americanexpress: amexStats?.stats || null
       }
     });
   } catch (err) {
@@ -579,6 +609,12 @@ router.get('/:id', async (req, res) => {
       }
       if (!dbJob && BroadcomJob) {
         dbJob = await BroadcomJob.findOne({ $or: [{ jobId: String(id) }, { id: String(id) }, { displayJobId: String(id) }] });
+      }
+      if (!dbJob && DataDogJob) {
+        dbJob = await DataDogJob.findOne({ $or: [{ jobId: String(id) }, { id: String(id) }, { displayJobId: String(id) }] });
+      }
+      if (!dbJob && AmericanExpressJob) {
+        dbJob = await AmericanExpressJob.findOne({ $or: [{ jobId: String(id) }, { id: String(id) }, { displayJobId: String(id) }] });
       }
       if (dbJob) {
         return res.json({ success: true, job: dbJob });

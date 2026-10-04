@@ -291,6 +291,26 @@ const AdminControls = ({ selectedCompany = 'All', onSelectCompany, onSyncSuccess
               />
               🔴 Broadcom Workday
             </label>
+            <label className={`company-chip ${selectedCompany === 'DataDog' || selectedCompany === 'Datadog' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="DataDog"
+                checked={selectedCompany === 'DataDog' || selectedCompany === 'Datadog'}
+                onChange={() => handleCompanyChange('DataDog')}
+              />
+              🐶 DataDog
+            </label>
+            <label className={`company-chip ${selectedCompany === 'AmericanExpress' || selectedCompany === 'American Express' || selectedCompany === 'Amex' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="AmericanExpress"
+                checked={selectedCompany === 'AmericanExpress' || selectedCompany === 'American Express' || selectedCompany === 'Amex'}
+                onChange={() => handleCompanyChange('AmericanExpress')}
+              />
+              💳 American Express
+            </label>
           </div>
         </div>
 

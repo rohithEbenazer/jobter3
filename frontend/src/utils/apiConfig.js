@@ -29,3 +29,5 @@ export const JPMC_API_BASE = `${API_HOST}/api/jobs/jpmc`;
 export const SWIGGY_API_BASE = `${API_HOST}/api/jobs/swiggy`;
 export const BROWSERSTACK_API_BASE = `${API_HOST}/api/jobs/browserstack`;
 export const BROADCOM_API_BASE = `${API_HOST}/api/jobs/broadcom`;
+export const DATADOG_API_BASE = `${API_HOST}/api/jobs/datadog`;
+export const AMERICAN_EXPRESS_API_BASE = `${API_HOST}/api/jobs/americanexpress`;

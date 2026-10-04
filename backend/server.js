@@ -64,6 +64,7 @@ const genpactRouter = require('./Route/genpact.route');
 const jpmcRouter = require('./Route/jpmc.route');
 const swiggyRouter = require('./Route/swiggy.route');
 const browserstackRouter = require('./Route/browserstack.route');
+const broadcomRouter = require('./Route/broadcom.route');
 const jobsRouter = require('./Route/jobs.route');
 
 // Dedicated company routes
@@ -91,6 +92,7 @@ app.use('/api/jobs/jpmc', jpmcRouter);
 app.use('/api/jobs/jpmorgan', jpmcRouter);
 app.use('/api/jobs/swiggy', swiggyRouter);
 app.use('/api/jobs/browserstack', browserstackRouter);
+app.use('/api/jobs/broadcom', broadcomRouter);
 
 // Primary unified jobs route: handles /api/jobs (db, sync, live, :id) with company filtering
 app.use('/api/jobs', jobsRouter);

@@ -171,6 +171,7 @@ const FilterSidebar = ({
     else if (/jpmc|jpmorgan|chase/i.test(comp)) comp = 'JPMorgan Chase';
     else if (/swiggy/i.test(comp)) comp = 'Swiggy';
     else if (/browserstack|bs/i.test(comp)) comp = 'BrowserStack';
+    else if (/broadcom|bc/i.test(comp)) comp = 'Broadcom';
     companyCounts[comp] = (companyCounts[comp] || 0) + 1;
 
     // Workmode
@@ -226,7 +227,7 @@ const FilterSidebar = ({
   });
 
   const datesList = ['Last 24 Hours', 'Last 7 Days', 'Last 14 Days', 'Last 30 Days', 'More than 30 Days'];
-  const defaultCompanies = ['BrowserStack', 'Swiggy', 'JPMorgan Chase', 'Genpact', 'TCS', 'Qualcomm', 'Goldman Sachs', 'Capgemini', 'Coforge', 'Microsoft', 'Amazon', 'Netflix', 'Salesforce', 'Zoho', 'Intel', 'NVIDIA', 'Oracle', 'AMD', 'Wipro', 'Meesho'];
+  const defaultCompanies = ['Broadcom', 'BrowserStack', 'Swiggy', 'JPMorgan Chase', 'Genpact', 'TCS', 'Qualcomm', 'Goldman Sachs', 'Capgemini', 'Coforge', 'Microsoft', 'Amazon', 'Netflix', 'Salesforce', 'Zoho', 'Intel', 'NVIDIA', 'Oracle', 'AMD', 'Wipro', 'Meesho'];
   const companiesList = Array.from(new Set([...defaultCompanies, ...Object.keys(companyCounts)]));
   const skillsList = Object.keys(skillCounts).sort((a, b) => skillCounts[b] - skillCounts[a]).slice(0, 12);
   const experiencesList = ['0 Years', '1 Year', '2 Years', '3 Years', '4 Years', '5+ Years'];

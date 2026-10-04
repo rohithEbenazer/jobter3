@@ -23,6 +23,7 @@ const { fetchAllGenpactJobs, syncGenpactJobsWithDb } = require('../api/genpact.a
 const { fetchAllJpmcJobs, syncJpmcJobsWithDb } = require('../api/jpmc.api');
 const { fetchAllSwiggyJobs, syncSwiggyJobsWithDb } = require('../api/swiggy.api');
 const { fetchAllBrowserStackJobs, syncBrowserStackJobsWithDb } = require('../api/browserstack.api');
+const { fetchAllBroadcomJobs, syncBroadcomJobsWithDb } = require('../api/broadcom.api');
 
 const { connectDB, CogforceJob } = require('../Db/cogforcedb');
 const { MicrosoftJob } = require('../Db/microsoftdb');
@@ -44,6 +45,7 @@ const { GenpactJob } = require('../Db/genpactdb');
 const { JpmcJob } = require('../Db/jpmcdb');
 const { SwiggyJob } = require('../Db/swiggydb');
 const { BrowserStackJob } = require('../Db/browserstackdb');
+const { BroadcomJob } = require('../Db/broadcomdb');
 
 /**
  * Helper to normalize company query param
@@ -91,6 +93,7 @@ router.get(['/live', '/'], async (req, res) => {
     const fetchJpmc = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'jpmc' || c.toLowerCase() === 'jpmorgan' || c.toLowerCase() === 'chase');
     const fetchSwiggy = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'swiggy');
     const fetchBrowserStack = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'browserstack' || c.toLowerCase() === 'bs');
+    const fetchBroadcom = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'broadcom' || c.toLowerCase() === 'bc');
 
     const tasks = [];
     if (fetchCoforge) tasks.push(fetchAllCoforgeJobs());
@@ -113,6 +116,7 @@ router.get(['/live', '/'], async (req, res) => {
     if (fetchJpmc) tasks.push(fetchAllJpmcJobs({ maxJobs: parseInt(maxJobs, 10) }));
     if (fetchSwiggy) tasks.push(fetchAllSwiggyJobs({ maxJobs: parseInt(maxJobs, 10) }));
     if (fetchBrowserStack) tasks.push(fetchAllBrowserStackJobs({ maxJobs: parseInt(maxJobs, 10) }));
+    if (fetchBroadcom) tasks.push(fetchAllBroadcomJobs({ maxJobs: parseInt(maxJobs, 10) }));
 
     const results = await Promise.all(tasks);
     results.forEach(arr => {
@@ -208,6 +212,7 @@ router.get('/db', async (req, res) => {
     const queryJpmc = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'jpmc' || c.toLowerCase() === 'jpmorgan' || c.toLowerCase() === 'chase');
     const querySwiggy = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'swiggy');
     const queryBrowserStack = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'browserstack' || c.toLowerCase() === 'bs');
+    const queryBroadcom = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'broadcom' || c.toLowerCase() === 'bc');
 
     const tasks = [];
     if (queryCoforge && CogforceJob) {
@@ -269,6 +274,9 @@ router.get('/db', async (req, res) => {
     }
     if (queryBrowserStack && BrowserStackJob) {
       tasks.push(BrowserStackJob.find(filter).sort({ createdAt: -1 }).allowDiskUse(true));
+    }
+    if (queryBroadcom && BroadcomJob) {
+      tasks.push(BroadcomJob.find(filter).sort({ createdAt: -1 }).allowDiskUse(true));
     }
 
     const results = await Promise.all(tasks);
@@ -351,6 +359,7 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
     const syncJpmc = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'jpmc' || c.toLowerCase() === 'jpmorgan' || c.toLowerCase() === 'chase');
     const syncSwiggy = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'swiggy');
     const syncBrowserStack = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'browserstack' || c.toLowerCase() === 'bs');
+    const syncBroadcom = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'broadcom' || c.toLowerCase() === 'bc');
 
     let coforgeStats = null;
     let microsoftStats = null;
@@ -372,6 +381,7 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
     let jpmcStats = null;
     let swiggyStats = null;
     let browserStackStats = null;
+    let broadcomStats = null;
 
     if (syncCoforge) {
       coforgeStats = await syncCogforceJobsWithDb(CogforceJob);
@@ -433,6 +443,9 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
     if (syncBrowserStack) {
       browserStackStats = await syncBrowserStackJobsWithDb(BrowserStackJob || CogforceJob, limit);
     }
+    if (syncBroadcom) {
+      broadcomStats = await syncBroadcomJobsWithDb(BroadcomJob || CogforceJob, limit);
+    }
 
     const totalFetchedRaw = (coforgeStats?.stats?.totalFetchedRaw || 0) + (microsoftStats?.stats?.totalFetchedRaw || 0) + (amazonStats?.stats?.totalFetchedRaw || 0) + (netflixStats?.stats?.totalFetchedRaw || 0) + (salesforceStats?.stats?.totalFetchedRaw || 0) + (zohoStats?.stats?.totalFetchedRaw || 0) + (intelStats?.stats?.totalFetchedRaw || 0) + (nvidiaStats?.stats?.totalFetchedRaw || 0) + (oracleStats?.stats?.totalFetchedRaw || 0) + (amdStats?.stats?.totalFetchedRaw || 0) + (wiproStats?.stats?.totalFetchedRaw || 0) + (meeshoStats?.stats?.totalFetchedRaw || 0) + (capgeminiStats?.stats?.totalFetchedRaw || 0) + (goldmanSachsStats?.stats?.totalFetchedRaw || 0) + (qualcommStats?.stats?.totalFetchedRaw || 0) + (tcsStats?.stats?.totalFetchedRaw || 0) + (genpactStats?.stats?.totalFetchedRaw || 0) + (jpmcStats?.stats?.totalFetchedRaw || 0) + (swiggyStats?.stats?.totalFetchedRaw || 0) + (browserStackStats?.stats?.totalFetchedRaw || 0);
     const insertedToDb = (coforgeStats?.stats?.insertedToDb || 0) + (microsoftStats?.stats?.insertedToDb || 0) + (amazonStats?.stats?.insertedToDb || 0) + (netflixStats?.stats?.insertedToDb || 0) + (salesforceStats?.stats?.insertedToDb || 0) + (zohoStats?.stats?.insertedToDb || 0) + (intelStats?.stats?.insertedToDb || 0) + (nvidiaStats?.stats?.insertedToDb || 0) + (oracleStats?.stats?.insertedToDb || 0) + (amdStats?.stats?.insertedToDb || 0) + (wiproStats?.stats?.insertedToDb || 0) + (meeshoStats?.stats?.insertedToDb || 0) + (capgeminiStats?.stats?.insertedToDb || 0) + (goldmanSachsStats?.stats?.insertedToDb || 0) + (qualcommStats?.stats?.insertedToDb || 0) + (tcsStats?.stats?.insertedToDb || 0) + (genpactStats?.stats?.insertedToDb || 0) + (jpmcStats?.stats?.insertedToDb || 0) + (swiggyStats?.stats?.insertedToDb || 0) + (browserStackStats?.stats?.insertedToDb || 0);
@@ -458,7 +471,8 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
     const countJpmc = JpmcJob ? await JpmcJob.countDocuments() : 0;
     const countSwiggy = SwiggyJob ? await SwiggyJob.countDocuments() : 0;
     const countBrowserStack = BrowserStackJob ? await BrowserStackJob.countDocuments() : 0;
-    const finalDbCount = countCoforge + countMicrosoft + countAmazon + countNetflix + countSalesforce + countZoho + countIntel + countNvidia + countOracle + countAmd + countWipro + countMeesho + countCapgemini + countGoldmanSachs + countQualcomm + countTcs + countGenpact + countJpmc + countSwiggy + countBrowserStack;
+    const countBroadcom = BroadcomJob ? await BroadcomJob.countDocuments() : 0;
+    const finalDbCount = countCoforge + countMicrosoft + countAmazon + countNetflix + countSalesforce + countZoho + countIntel + countNvidia + countOracle + countAmd + countWipro + countMeesho + countCapgemini + countGoldmanSachs + countQualcomm + countTcs + countGenpact + countJpmc + countSwiggy + countBrowserStack + countBroadcom;
 
     res.json({
       success: true,
@@ -487,7 +501,8 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
         genpact: genpactStats?.stats || null,
         jpmc: jpmcStats?.stats || null,
         swiggy: swiggyStats?.stats || null,
-        browserstack: browserStackStats?.stats || null
+        browserstack: browserStackStats?.stats || null,
+        broadcom: broadcomStats?.stats || null
       }
     });
   } catch (err) {
@@ -561,6 +576,9 @@ router.get('/:id', async (req, res) => {
       }
       if (!dbJob && BrowserStackJob) {
         dbJob = await BrowserStackJob.findOne({ $or: [{ jobId: String(id) }, { id: String(id) }, { reqId: String(id) }, { displayJobId: String(id) }] });
+      }
+      if (!dbJob && BroadcomJob) {
+        dbJob = await BroadcomJob.findOne({ $or: [{ jobId: String(id) }, { id: String(id) }, { displayJobId: String(id) }] });
       }
       if (dbJob) {
         return res.json({ success: true, job: dbJob });

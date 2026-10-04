@@ -28,3 +28,4 @@ export const GENPACT_API_BASE = `${API_HOST}/api/jobs/genpact`;
 export const JPMC_API_BASE = `${API_HOST}/api/jobs/jpmc`;
 export const SWIGGY_API_BASE = `${API_HOST}/api/jobs/swiggy`;
 export const BROWSERSTACK_API_BASE = `${API_HOST}/api/jobs/browserstack`;
+export const BROADCOM_API_BASE = `${API_HOST}/api/jobs/broadcom`;

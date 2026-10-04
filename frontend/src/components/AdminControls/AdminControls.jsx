@@ -281,6 +281,16 @@ const AdminControls = ({ selectedCompany = 'All', onSelectCompany, onSyncSuccess
               />
               💻 BrowserStack Workday
             </label>
+            <label className={`company-chip ${selectedCompany === 'Broadcom' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="Broadcom"
+                checked={selectedCompany === 'Broadcom'}
+                onChange={() => handleCompanyChange('Broadcom')}
+              />
+              🔴 Broadcom Workday
+            </label>
           </div>
         </div>
 

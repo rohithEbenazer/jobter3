@@ -34,3 +34,6 @@ export const AMERICAN_EXPRESS_API_BASE = `${API_HOST}/api/jobs/americanexpress`;
 export const PERSISTENT_API_BASE = `${API_HOST}/api/jobs/persistent`;
 export const UNISYS_API_BASE = `${API_HOST}/api/jobs/unisys`;
 export const FLEXTRONICS_API_BASE = `${API_HOST}/api/jobs/flextronics`;
+export const HONEYWELL_API_BASE = `${API_HOST}/api/jobs/honeywell`;
+export const WALMART_API_BASE = `${API_HOST}/api/jobs/walmart`;
+export const DOCUSIGN_API_BASE = `${API_HOST}/api/jobs/docusign`;

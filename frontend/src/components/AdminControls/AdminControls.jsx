@@ -341,6 +341,36 @@ const AdminControls = ({ selectedCompany = 'All', onSelectCompany, onSyncSuccess
               />
               ⚡ Flextronics Workday
             </label>
+            <label className={`company-chip ${selectedCompany === 'Honeywell' || selectedCompany === 'HW' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="Honeywell"
+                checked={selectedCompany === 'Honeywell' || selectedCompany === 'HW'}
+                onChange={() => handleCompanyChange('Honeywell')}
+              />
+              🚀 Honeywell Oracle
+            </label>
+            <label className={`company-chip ${selectedCompany === 'Walmart' || selectedCompany === 'WM' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="Walmart"
+                checked={selectedCompany === 'Walmart' || selectedCompany === 'WM'}
+                onChange={() => handleCompanyChange('Walmart')}
+              />
+              🛒 Walmart GraphQL
+            </label>
+            <label className={`company-chip ${selectedCompany === 'DocuSign' || selectedCompany === 'DS' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="DocuSign"
+                checked={selectedCompany === 'DocuSign' || selectedCompany === 'DS'}
+                onChange={() => handleCompanyChange('DocuSign')}
+              />
+              ✍️ DocuSign API
+            </label>
           </div>
         </div>
 

@@ -3,6 +3,18 @@ import './OfficialPortals.css';
 
 const PORTAL_LIST = [
   {
+    id: 'docusign',
+    name: 'DocuSign',
+    code: 'DOCUSIGN',
+    category: 'Software, e-Signature & Agreement Cloud',
+    system: 'DocuSign Careers API',
+    icon: '✍️',
+    badgeColor: 'linear-gradient(135deg, #ff1a40, #99001a)',
+    officialUrl: 'https://careers.docusign.com/careers-home/jobs',
+    apiUrl: 'https://careers.docusign.com/api/jobs',
+    description: 'Official global software engineering, product, sales, and AI agreement cloud career opportunities at DocuSign.'
+  },
+  {
     id: 'americanexpress',
     name: 'American Express',
     code: 'AMEX',
@@ -37,6 +49,30 @@ const PORTAL_LIST = [
     officialUrl: 'https://flextronics.wd1.myworkdayjobs.com/Careers?source=Flex_Career_Site',
     apiUrl: 'https://flextronics.wd1.myworkdayjobs.com/wday/cxs/flextronics/Careers/jobs',
     description: 'Official global electronics manufacturing, supply chain solutions, and engineering careers at Flex (Flextronics).'
+  },
+  {
+    id: 'honeywell',
+    name: 'Honeywell',
+    code: 'HONEYWELL',
+    category: 'Industrial Automation & Aerospace',
+    system: 'Oracle HCM Cloud Recruiting',
+    icon: '🚀',
+    badgeColor: 'linear-gradient(135deg, #e31837, #800d1e)',
+    officialUrl: 'https://careers.honeywell.com/',
+    apiUrl: 'https://ibqbjb.fa.ocs.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions',
+    description: 'Official global industrial automation, aerospace, building technologies, and software careers at Honeywell.'
+  },
+  {
+    id: 'walmart',
+    name: 'Walmart Global Tech',
+    code: 'WALMART',
+    category: 'eCommerce, Retail Tech & Software',
+    system: 'Walmart GraphQL Careers API',
+    icon: '🛒',
+    badgeColor: 'linear-gradient(135deg, #0071dc, #004c91)',
+    officialUrl: 'https://careers.walmart.com/us/en/results?searchQuery=All&careerareas=Technology',
+    apiUrl: 'https://careers.walmart.com/api/graphql',
+    description: 'Official global technology, software engineering, AI/ML, cloud, and data careers at Walmart Global Tech.'
   },
   {
     id: 'unisys',

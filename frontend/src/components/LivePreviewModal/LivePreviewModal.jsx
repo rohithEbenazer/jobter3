@@ -68,11 +68,13 @@ const LivePreviewModal = ({ initialCompany = 'All', onClose, showToast }) => {
           throw new Error(`HTTP ${res.status}: Failed to fetch live stream`);
         }
         const data = await res.json();
-        if (Array.isArray(data)) {
-          setLiveJobs(data);
-          showToast(`Fetched ${data.length} live jobs directly from ${companyTab} API`, 'success');
+        const jobsArray = Array.isArray(data) ? data : (data && Array.isArray(data.jobs) ? data.jobs : []);
+        if (jobsArray.length > 0 || (data && (Array.isArray(data) || Array.isArray(data.jobs)))) {
+          setLiveJobs(jobsArray);
+          showToast(`Fetched ${jobsArray.length} live jobs directly from ${companyTab} API`, 'success');
         } else {
-          throw new Error('Invalid format returned');
+          setLiveJobs([]);
+          showToast(`No live jobs found for ${companyTab}`, 'info');
         }
       } catch (err) {
         setError(err.message);

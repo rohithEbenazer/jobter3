@@ -331,6 +331,16 @@ const AdminControls = ({ selectedCompany = 'All', onSelectCompany, onSyncSuccess
               />
               🖥️ Unisys Workday
             </label>
+            <label className={`company-chip ${selectedCompany === 'Synchrony' || selectedCompany === 'Synchrony Financial' || selectedCompany === 'SynchronyFinancial' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="companySync"
+                value="Synchrony"
+                checked={selectedCompany === 'Synchrony' || selectedCompany === 'Synchrony Financial' || selectedCompany === 'SynchronyFinancial'}
+                onChange={() => handleCompanyChange('Synchrony')}
+              />
+              🏦 Synchrony Workday
+            </label>
             <label className={`company-chip ${selectedCompany === 'Flextronics' || selectedCompany === 'Flex' ? 'active' : ''}`}>
               <input
                 type="radio"

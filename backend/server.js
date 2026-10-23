@@ -73,6 +73,8 @@ const flextronicsRouter = require('./Route/flextronics.route');
 const honeywellRouter = require('./Route/honeywell.route');
 const walmartRouter = require('./Route/walmart.route');
 const docusignRouter = require('./Route/docusign.route');
+const synchronyRouter = require('./Route/synchrony.route');
+const crowdstrikeRouter = require('./Route/crowdstrike.route');
 const jobsRouter = require('./Route/jobs.route');
 
 // Dedicated company routes
@@ -113,6 +115,9 @@ app.use('/api/jobs/flex', flextronicsRouter);
 app.use('/api/jobs/honeywell', honeywellRouter);
 app.use('/api/jobs/walmart', walmartRouter);
 app.use('/api/jobs/docusign', docusignRouter);
+app.use('/api/jobs/synchrony', synchronyRouter);
+app.use('/api/jobs/synchronyfinancial', synchronyRouter);
+app.use('/api/jobs/crowdstrike', crowdstrikeRouter);
 
 // Primary unified jobs route: handles /api/jobs (db, sync, live, :id) with company filtering
 app.use('/api/jobs', jobsRouter);

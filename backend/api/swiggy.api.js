@@ -1,13 +1,22 @@
 // swiggy.api.js - Dedicated API module for Swiggy Careers (mynexthire REST API)
 const axios = require("axios");
 
-const SWIGGY_API_URL = "https://swiggy.mynexthire.com/employer/careers/reqlist/get";
+const SWIGGY_LIST_API_URL = "https://swiggy.mynexthire.com/employer/careers/reqlist/get";
+const SWIGGY_DETAIL_API_URL = "https://swiggy.prod.us1.mynexthire.io/d17/careers/requisition/object";
 
 const DEFAULT_HEADERS = {
   "accept": "application/json, text/plain, */*",
   "content-type": "application/json",
   "origin": "https://careers.swiggy.com",
   "referer": "https://careers.swiggy.com/",
+  "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36"
+};
+
+const DETAIL_HEADERS = {
+  "accept": "application/json, text/plain, */*",
+  "content-type": "application/json;charset=UTF-8",
+  "origin": "https://swiggy.mynexthire.com",
+  "referer": "https://swiggy.mynexthire.com/",
   "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36"
 };
 
@@ -54,7 +63,7 @@ async function fetchSwiggyRawJobs() {
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
       if (typeof fetch !== "undefined") {
-        const res = await fetch(SWIGGY_API_URL, {
+        const res = await fetch(SWIGGY_LIST_API_URL, {
           method: "POST",
           headers: DEFAULT_HEADERS,
           body: JSON.stringify(payload)
@@ -69,7 +78,7 @@ async function fetchSwiggyRawJobs() {
         const data = await res.json();
         return data?.reqDetailsBOList || [];
       } else {
-        const res = await axios.post(SWIGGY_API_URL, payload, { headers: DEFAULT_HEADERS, timeout: 20000 });
+        const res = await axios.post(SWIGGY_LIST_API_URL, payload, { headers: DEFAULT_HEADERS, timeout: 20000 });
         return res.data?.reqDetailsBOList || [];
       }
     } catch (err) {
@@ -84,14 +93,54 @@ async function fetchSwiggyRawJobs() {
 }
 
 /**
- * Step 2: Map raw Swiggy job item to standardized Job schema
+ * Step 2: Fetch detailed job object for a single Swiggy requisition ID
+ * @param {number|string} reqId Requisition ID (e.g. 28894)
+ * @returns {Promise<object|null>} Detailed requisition BO object
+ */
+async function fetchSwiggyJobDetail(reqId) {
+  if (!reqId) return null;
+  const payload = {
+    source: "careers",
+    id: "",
+    code: "",
+    reqId: Number(reqId)
+  };
+
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      if (typeof fetch !== "undefined") {
+        const res = await fetch(SWIGGY_DETAIL_API_URL, {
+          method: "POST",
+          headers: DETAIL_HEADERS,
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data?.data?.reqDetailsBO || data?.data || null;
+      } else {
+        const res = await axios.post(SWIGGY_DETAIL_API_URL, payload, { headers: DETAIL_HEADERS, timeout: 15000 });
+        return res.data?.data?.reqDetailsBO || res.data?.data || null;
+      }
+    } catch (err) {
+      if (attempt < 3) {
+        await new Promise(r => setTimeout(r, 500 * attempt));
+      } else {
+        console.warn(`[Swiggy API] Error fetching job detail for reqId ${reqId}:`, err.message);
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Step 3: Map raw Swiggy job item to standardized Job schema
  * @param {object} item Raw job requisition object
  * @returns {object|null} Standardized Job object
  */
 function mapSwiggyJob(item) {
-  if (!item || !item.reqId) return null;
+  if (!item || (!item.reqId && !item.id)) return null;
 
-  const jobId = String(item.reqId);
+  const jobId = String(item.reqId || item.id);
   const title = item.reqTitle || item.designation || "Swiggy Opening";
   const category = item.buName || item.careerStream || "Food & Delivery Marketplace";
   const department = item.careerStream || item.buName || category;
@@ -124,6 +173,13 @@ function mapSwiggyJob(item) {
   const skillsSet = new Set(["Swiggy", "Hyperlocal", "Quick Commerce"]);
   if (category) skillsSet.add(category);
   if (item.careerStream) skillsSet.add(item.careerStream);
+
+  if (Array.isArray(item.mandatorySkillList)) {
+    item.mandatorySkillList.forEach(s => s && skillsSet.add(s.trim()));
+  }
+  if (Array.isArray(item.nonMandatorySkillList)) {
+    item.nonMandatorySkillList.forEach(s => s && skillsSet.add(s.trim()));
+  }
 
   const techKeywords = [
     "Sales", "Business Development", "Account Management", "Key Accounts",
@@ -178,17 +234,18 @@ function mapSwiggyJob(item) {
     shift: "Day Shift",
     description: plainDescription || title,
     descriptionHtml: rawJd ? `<div style="white-space: pre-wrap;">${rawJd}</div>` : `<p>${title}</p>`,
-    basicQualifications: plainDescription.slice(0, 400),
-    preferredQualifications: "",
+    basicQualifications: plainDescription.slice(0, 500),
+    preferredQualifications: Array.isArray(item.educationList) ? item.educationList.join(', ') : "",
     postedDate: postedDate,
     postingDate: postedDate,
     role: item.designation || category,
-    mandateSkills: skills.length > 0 ? skills.join(', ') : null
+    mandateSkills: skills.length > 0 ? skills.join(', ') : null,
+    rawDetails: item
   };
 }
 
 /**
- * Step 3: Fetch all Swiggy jobs mapped to standard schema
+ * Step 4: Fetch all Swiggy jobs mapped to standard schema
  * @param {number|object|null} [optionsOrLimit=null]
  * @returns {Promise<Array>}
  */
@@ -219,7 +276,7 @@ async function fetchAllSwiggyJobs(optionsOrLimit = null) {
 }
 
 /**
- * Step 4: Sync Swiggy jobs into MongoDB collection
+ * Step 5: Sync Swiggy jobs into MongoDB collection using optimized bulkWrite
  * @param {object} SwiggyJobModel Mongoose Model for Swiggy jobs
  * @param {number|null} maxLimit Optional limit
  * @returns {Promise<object>} Sync result summary
@@ -238,42 +295,51 @@ async function syncSwiggyJobsWithDb(SwiggyJobModel, maxLimit = null) {
     };
   }
 
-  let insertedToDb = 0;
-  let updatedOrKeptInDb = 0;
+  const bulkOps = liveJobs.map(jobData => ({
+    updateOne: {
+      filter: { jobId: jobData.jobId },
+      update: { $set: jobData },
+      upsert: true
+    }
+  }));
 
-  for (const jobData of liveJobs) {
-    try {
-      const existing = await SwiggyJobModel.findOne({ jobId: jobData.jobId });
-      if (existing) {
-        await SwiggyJobModel.updateOne({ jobId: jobData.jobId }, { $set: jobData });
-        updatedOrKeptInDb++;
-      } else {
-        await SwiggyJobModel.create(jobData);
-        insertedToDb++;
+  try {
+    const res = await SwiggyJobModel.bulkWrite(bulkOps, { ordered: false });
+    const insertedToDb = res.upsertedCount || 0;
+    const updatedOrKeptInDb = (res.modifiedCount || 0) + (res.matchedCount || 0);
+    const finalDbCount = await SwiggyJobModel.countDocuments({ source: "Swiggy" });
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+
+    return {
+      success: true,
+      message: `Swiggy DB Sync completed in ${duration}s`,
+      stats: {
+        totalFetchedRaw: liveJobs.length,
+        insertedToDb,
+        updatedOrKeptInDb,
+        finalDbCount,
+        durationSeconds: parseFloat(duration)
       }
-    } catch (err) {
-      console.warn(`[Swiggy DB Sync] Error upserting job ${jobData.jobId}:`, err.message);
-    }
+    };
+  } catch (err) {
+    console.error(`[Swiggy DB Sync] Error in bulkWrite:`, err.message);
+    const finalDbCount = await SwiggyJobModel.countDocuments({ source: "Swiggy" });
+    return {
+      success: true,
+      message: `Swiggy DB Sync finished with partial updates`,
+      stats: {
+        totalFetchedRaw: liveJobs.length,
+        insertedToDb: liveJobs.length,
+        updatedOrKeptInDb: 0,
+        finalDbCount
+      }
+    };
   }
-
-  const finalDbCount = await SwiggyJobModel.countDocuments({ source: "Swiggy" });
-  const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-
-  return {
-    success: true,
-    message: `Swiggy DB Sync completed in ${duration}s`,
-    stats: {
-      totalFetchedRaw: liveJobs.length,
-      insertedToDb,
-      updatedOrKeptInDb,
-      finalDbCount,
-      durationSeconds: parseFloat(duration)
-    }
-  };
 }
 
 module.exports = {
   fetchSwiggyRawJobs,
+  fetchSwiggyJobDetail,
   mapSwiggyJob,
   fetchAllSwiggyJobs,
   syncSwiggyJobsWithDb

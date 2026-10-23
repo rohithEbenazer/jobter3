@@ -39,6 +39,18 @@ const PORTAL_LIST = [
     description: 'Official global digital engineering, cloud, data engineering, and software careers at Persistent Systems.'
   },
   {
+    id: 'synchrony',
+    name: 'Synchrony Financial',
+    code: 'SYNCHRONY',
+    category: 'Financial Services, Banking & Fintech',
+    system: 'Workday Recruiting API',
+    icon: '🏦',
+    badgeColor: 'linear-gradient(135deg, #005a9c, #002d54)',
+    officialUrl: 'https://synchronyfinancial.wd5.myworkdayjobs.com/en-US/careers',
+    apiUrl: 'https://synchronyfinancial.wd5.myworkdayjobs.com/wday/cxs/synchronyfinancial/careers/jobs',
+    description: 'Official global consumer financial services, technology, cloud architecture, and data engineering careers at Synchrony Financial.'
+  },
+  {
     id: 'flextronics',
     name: 'Flextronics (Flex)',
     code: 'FLEX',

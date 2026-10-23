@@ -3,7 +3,13 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 
-const { fetchAllSwiggyJobs, syncSwiggyJobsWithDb } = require('../api/swiggy.api');
+const {
+  fetchAllSwiggyJobs,
+  syncSwiggyJobsWithDb,
+  fetchSwiggyJobDetail,
+  mapSwiggyJob
+} = require('../api/swiggy.api');
+
 const { connectDB, SwiggyJob } = require('../Db/swiggydb');
 
 /**
@@ -100,18 +106,58 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
 });
 
 /**
+ * @route   POST /api/jobs/swiggy/requisition
+ * @desc    Fetch single Swiggy requisition object directly from MyNextHire detail API
+ * @access  Public
+ */
+router.post('/requisition', async (req, res) => {
+  try {
+    const { reqId } = req.body || {};
+    if (!reqId) {
+      return res.status(400).json({ success: false, error: 'reqId is required in body' });
+    }
+    const rawDetail = await fetchSwiggyJobDetail(reqId);
+    if (!rawDetail) {
+      return res.status(404).json({ success: false, error: `Swiggy requisition with ID ${reqId} not found` });
+    }
+    const mapped = mapSwiggyJob(rawDetail);
+    res.json({
+      success: true,
+      reqId: reqId,
+      job: mapped,
+      rawDetails: rawDetail
+    });
+  } catch (err) {
+    console.error('[Swiggy Requisition Route] Error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
  * @route   GET /api/jobs/swiggy/:id
- * @desc    Fetch single Swiggy job details by ID from DB
+ * @desc    Fetch single Swiggy job details by ID from DB or live MyNextHire detail API
  */
 router.get('/:id', async (req, res) => {
   try {
-    await connectDB();
     const { id } = req.params;
-    const job = await SwiggyJob.findOne({ $or: [{ jobId: String(id) }, { id: String(id) }] });
-    if (job) {
-      return res.json({ success: true, job });
+    const { live } = req.query;
+
+    if (!live) {
+      await connectDB();
+      const job = await SwiggyJob.findOne({ $or: [{ jobId: String(id) }, { id: String(id) }] });
+      if (job) {
+        return res.json({ success: true, job });
+      }
     }
-    res.status(404).json({ success: false, error: 'Swiggy job not found' });
+
+    // Live detail fallback from MyNextHire API
+    const rawDetail = await fetchSwiggyJobDetail(id);
+    if (rawDetail) {
+      const mapped = mapSwiggyJob(rawDetail);
+      return res.json({ success: true, job: mapped, rawDetails: rawDetail });
+    }
+
+    res.status(404).json({ success: false, error: `Swiggy job with ID ${id} not found` });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

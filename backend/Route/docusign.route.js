@@ -23,11 +23,7 @@ router.get(['/', '/live'], async (req, res) => {
   try {
     const limit = req.query.limit ? parseInt(req.query.limit) : null;
     const jobs = await fetchAllDocuSignJobs(limit);
-    res.json({
-      success: true,
-      count: jobs.length,
-      jobs: jobs
-    });
+    res.json(jobs);
   } catch (err) {
     console.error('Error fetching live DocuSign jobs:', err.message);
     res.status(500).json({ success: false, error: err.message });

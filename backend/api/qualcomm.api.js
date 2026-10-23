@@ -152,7 +152,7 @@ function mapQualcommJob(item, detail = null) {
   // Locations array
   const rawLocs = item.locations || detail?.locations || [];
   const location = Array.isArray(rawLocs) && rawLocs.length > 0 ? rawLocs.join(', ') : 'Not specified';
-  
+
   // Parse location city/state/country
   const locParts = location.split(',').map(s => s.trim()).filter(Boolean);
   const city = locParts.length > 0 ? [locParts[0]] : [];

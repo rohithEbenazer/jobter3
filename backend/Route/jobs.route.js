@@ -32,6 +32,8 @@ const { fetchAllFlextronicsJobs, syncFlextronicsJobsWithDb } = require('../api/f
 const { fetchAllHoneywellJobs, syncHoneywellJobsWithDb } = require('../api/honeywell.api');
 const { fetchAllWalmartJobs, syncWalmartJobsWithDb } = require('../api/walmart.api');
 const { fetchAllDocuSignJobs, syncDocuSignJobsWithDb } = require('../api/docusign.api');
+const { fetchAllSynchronyJobs, syncSynchronyJobsWithDb } = require('../api/synchrony.api');
+const { fetchAllCrowdStrikeJobs, syncCrowdStrikeJobsWithDb } = require('../api/crowdstrike.api');
 
 const { connectDB, CogforceJob } = require('../Db/cogforcedb');
 const { MicrosoftJob } = require('../Db/microsoftdb');
@@ -62,6 +64,8 @@ const { FlextronicsJob } = require('../Db/flextronicsdb');
 const { HoneywellJob } = require('../Db/honeywelldb');
 const { WalmartJob } = require('../Db/walmartdb');
 const { DocuSignJob } = require('../Db/docusigndb');
+const { SynchronyJob } = require('../Db/synchronydb');
+const { CrowdStrikeJob } = require('../Db/crowdstrikedb');
 
 /**
  * Helper to normalize company query param
@@ -118,6 +122,8 @@ router.get(['/live', '/'], async (req, res) => {
     const fetchHoneywell = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'honeywell' || c.toLowerCase() === 'hw');
     const fetchWalmart = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'walmart' || c.toLowerCase() === 'wm');
     const fetchDocuSign = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'docusign' || c.toLowerCase() === 'ds');
+    const fetchSynchrony = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'synchrony' || c.toLowerCase() === 'synchronyfinancial' || c.toLowerCase() === 'synchrony financial' || c.toLowerCase() === 'sf');
+    const fetchCrowdStrike = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'crowdstrike' || c.toLowerCase() === 'cs');
 
     const tasks = [];
     if (fetchCoforge) tasks.push(fetchAllCoforgeJobs());
@@ -149,6 +155,8 @@ router.get(['/live', '/'], async (req, res) => {
     if (fetchHoneywell) tasks.push(fetchAllHoneywellJobs({ maxJobs: parseInt(maxJobs, 10) }));
     if (fetchWalmart) tasks.push(fetchAllWalmartJobs({ maxJobs: parseInt(maxJobs, 10) }));
     if (fetchDocuSign) tasks.push(fetchAllDocuSignJobs(parseInt(maxJobs, 10)));
+    if (fetchSynchrony) tasks.push(fetchAllSynchronyJobs({ maxJobs: parseInt(maxJobs, 10) }));
+    if (fetchCrowdStrike) tasks.push(fetchAllCrowdStrikeJobs({ maxJobs: parseInt(maxJobs, 10) }));
 
     const results = await Promise.all(tasks);
     results.forEach(arr => {
@@ -253,6 +261,7 @@ router.get('/db', async (req, res) => {
     const queryHoneywell = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'honeywell' || c.toLowerCase() === 'hw');
     const queryWalmart = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'walmart' || c.toLowerCase() === 'wm');
     const queryDocuSign = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'docusign' || c.toLowerCase() === 'ds');
+    const querySynchrony = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'synchrony' || c.toLowerCase() === 'synchronyfinancial' || c.toLowerCase() === 'synchrony financial' || c.toLowerCase() === 'sf');
 
     const tasks = [];
     if (queryCoforge && CogforceJob) {
@@ -341,6 +350,9 @@ router.get('/db', async (req, res) => {
     }
     if (queryDocuSign && DocuSignJob) {
       tasks.push(DocuSignJob.find(filter).sort({ createdAt: -1 }).allowDiskUse(true));
+    }
+    if (querySynchrony && SynchronyJob) {
+      tasks.push(SynchronyJob.find(filter).sort({ createdAt: -1 }).allowDiskUse(true));
     }
 
     const results = await Promise.all(tasks);
@@ -432,6 +444,7 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
     const syncHoneywell = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'honeywell' || c.toLowerCase() === 'hw');
     const syncWalmart = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'walmart' || c.toLowerCase() === 'wm');
     const syncDocuSign = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'docusign' || c.toLowerCase() === 'ds');
+    const syncSynchrony = !selectedCompanies || selectedCompanies.some(c => c.toLowerCase() === 'synchrony' || c.toLowerCase() === 'synchronyfinancial' || c.toLowerCase() === 'synchrony financial' || c.toLowerCase() === 'sf');
 
     let coforgeStats = null;
     let microsoftStats = null;
@@ -462,6 +475,7 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
     let honeywellStats = null;
     let walmartStats = null;
     let docuSignStats = null;
+    let synchronyStats = null;
 
     if (syncCoforge) {
       coforgeStats = await syncCogforceJobsWithDb(CogforceJob);
@@ -549,6 +563,9 @@ router.post(['/sync', '/dbsync'], async (req, res) => {
     }
     if (syncDocuSign) {
       docuSignStats = await syncDocuSignJobsWithDb(limit);
+    }
+    if (syncSynchrony) {
+      synchronyStats = await syncSynchronyJobsWithDb({ maxJobs: limit || 150 });
     }
 
     const totalFetchedRaw = (coforgeStats?.stats?.totalFetchedRaw || 0) + (microsoftStats?.stats?.totalFetchedRaw || 0) + (amazonStats?.stats?.totalFetchedRaw || 0) + (netflixStats?.stats?.totalFetchedRaw || 0) + (salesforceStats?.stats?.totalFetchedRaw || 0) + (zohoStats?.stats?.totalFetchedRaw || 0) + (intelStats?.stats?.totalFetchedRaw || 0) + (nvidiaStats?.stats?.totalFetchedRaw || 0) + (oracleStats?.stats?.totalFetchedRaw || 0) + (amdStats?.stats?.totalFetchedRaw || 0) + (wiproStats?.stats?.totalFetchedRaw || 0) + (meeshoStats?.stats?.totalFetchedRaw || 0) + (capgeminiStats?.stats?.totalFetchedRaw || 0) + (goldmanSachsStats?.stats?.totalFetchedRaw || 0) + (qualcommStats?.stats?.totalFetchedRaw || 0) + (tcsStats?.stats?.totalFetchedRaw || 0) + (genpactStats?.stats?.totalFetchedRaw || 0) + (jpmcStats?.stats?.totalFetchedRaw || 0) + (swiggyStats?.stats?.totalFetchedRaw || 0) + (browserStackStats?.stats?.totalFetchedRaw || 0) + (broadcomStats?.stats?.totalFetchedRaw || 0) + (dataDogStats?.stats?.totalFetchedRaw || 0) + (amexStats?.stats?.totalFetchedRaw || 0) + (persistentStats?.stats?.totalFetchedRaw || 0) + (unisysStats?.stats?.totalFetchedRaw || 0) + (flextronicsStats?.stats?.totalFetchedRaw || 0) + (honeywellStats?.stats?.totalFetchedRaw || 0) + (walmartStats?.stats?.totalFetchedRaw || 0);
